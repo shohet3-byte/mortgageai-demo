@@ -1139,16 +1139,22 @@ function renderAds(catIdx) {
 renderAds(0);
 
 // ===== NAVIGATION =====
-function goTo(id) {
+function goTo(id, fromHistory) {
   document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
   var t = document.getElementById(id);
   if(t){ t.classList.add('active'); t.scrollTop = 0; }
-  // status bar color
   var sb = document.getElementById('sbar');
   var lightScreens = ['s-onboard'];
   updateFab(id);
   if(sb){ sb.className = 'sb' + (lightScreens.indexOf(id)>=0 ? ' dark' : ''); }
+  // push to browser history so back button works
+  if(!fromHistory) history.pushState({screen: id}, '', '#' + id);
 }
+// handle browser/phone back button
+window.addEventListener('popstate', function(e) {
+  var id = (e.state && e.state.screen) ? e.state.screen : 's-home';
+  goTo(id, true);
+});
 
 // ===== SPLASH TIMER =====
 // splash timer — triggered after language selection via goTo('s-splash')
