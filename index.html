@@ -252,6 +252,28 @@ select.finput{-webkit-appearance:none;appearance:none;}
 .advisor-sheet h3{font-size:18px;font-weight:800;margin-bottom:8px;}
 .advisor-sheet p{font-size:14px;color:var(--sub);margin-bottom:20px;line-height:1.6;}
 .advisor-close{background:var(--p);color:#fff;border:none;border-radius:14px;padding:14px 0;width:100%;font-size:15px;font-weight:700;cursor:pointer;}
+/* ===== MORTGAGE PAYMENT SHEET ===== */
+.pay-overlay{position:absolute;inset:0;background:rgba(0,0,0,.6);z-index:400;display:none;align-items:flex-end;}
+.pay-overlay.open{display:flex;}
+.pay-sheet{background:#fff;border-radius:28px 28px 0 0;padding:24px 20px 32px;width:100%;}
+.pay-sheet-title{font-size:18px;font-weight:800;color:var(--txt);text-align:center;margin-bottom:4px;}
+.pay-sheet-sub{font-size:13px;color:var(--sub);text-align:center;margin-bottom:20px;}
+.pay-option{border:2px solid #e8e8f0;border-radius:18px;padding:16px 18px;margin-bottom:12px;cursor:pointer;transition:all .2s;background:#fff;width:100%;text-align:right;}
+.pay-option:active{transform:scale(.98);}
+.pay-option.highlight{border-color:var(--p);background:#f5f3ff;}
+.pay-option-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.pay-option-name{font-size:15px;font-weight:700;color:var(--txt);}
+.pay-option-price{font-size:20px;font-weight:800;color:var(--p);}
+.pay-option-price span{font-size:12px;font-weight:500;color:var(--sub);}
+.pay-option-desc{font-size:12px;color:var(--sub);line-height:1.6;}
+.pay-option-features{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+.pay-feat-tag{background:#f0f2ff;color:var(--p);font-size:11px;font-weight:600;padding:3px 10px;border-radius:99px;}
+.pay-feat-tag.green{background:#e8fdf5;color:#06D6A0;}
+.pay-badge{background:linear-gradient(135deg,#F72585,#7209B7);color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;}
+.pay-divider{text-align:center;font-size:12px;color:#bbb;margin:4px 0 12px;position:relative;}
+.pay-divider::before,.pay-divider::after{content:'';position:absolute;top:50%;width:42%;height:1px;background:#e8e8f0;}
+.pay-divider::before{right:0;}.pay-divider::after{left:0;}
+.pay-cancel{width:100%;background:none;border:none;color:var(--sub);font-size:14px;padding:12px;cursor:pointer;margin-top:4px;}
 /* ===== RATE MODAL ===== */
 .rate-overlay{position:absolute;inset:0;background:rgba(0,0,0,.55);z-index:400;display:none;align-items:center;justify-content:center;}
 .rate-overlay.open{display:flex;}
@@ -848,7 +870,7 @@ select.finput{-webkit-appearance:none;appearance:none;}
         <div class="detail-row"><span class="detail-key">ביטוח מבנה נדרש</span><span class="detail-val">כן</span></div>
         <div class="detail-row"><span class="detail-key">עמלת פירעון מוקדם</span><span class="detail-val">1%</span></div>
       </div>
-      <button class="cta-btn" onclick="bookAdvisor()">📞 קבע פגישה עם יועץ</button>
+      <button class="cta-btn" onclick="showPaySheet()">🏦 קבל את ההצעה שלך</button>
     </div>
   </div>
 
@@ -868,7 +890,7 @@ select.finput{-webkit-appearance:none;appearance:none;}
         <div class="detail-row"><span class="detail-key">החזר חודשי</span><span class="detail-val">11,200 ₪</span></div>
         <div class="detail-row"><span class="detail-key">שעבוד נדרש</span><span class="detail-val">ראשון</span></div>
       </div>
-      <button class="cta-btn" style="background:linear-gradient(135deg,#7209B7,#3A0CA3);" onclick="bookAdvisor()">📞 קבע פגישה עם יועץ</button>
+      <button class="cta-btn" style="background:linear-gradient(135deg,#7209B7,#3A0CA3);" onclick="showPaySheet()">🏦 קבל את ההצעה שלך</button>
     </div>
   </div>
 
@@ -1150,6 +1172,53 @@ select.finput{-webkit-appearance:none;appearance:none;}
     </div>
   </div>
 
+  <!-- ===== MORTGAGE PAYMENT SHEET ===== -->
+  <div class="pay-overlay" id="payOverlay" onclick="if(event.target===this)closePaySheet()">
+    <div class="pay-sheet">
+      <div class="pay-sheet-title">בחר את האפשרות שלך</div>
+      <div class="pay-sheet-sub">כל הכסף שלך מוגן — תשלום מאובטח 🔒</div>
+
+      <!-- OPTION 1: One-time -->
+      <button class="pay-option highlight" onclick="payOnce()">
+        <div class="pay-option-top">
+          <div>
+            <div class="pay-option-name">🏦 קבלת הצעה מלאה</div>
+            <span class="pay-badge">חד פעמי</span>
+          </div>
+          <div class="pay-option-price">₪500<span> בלבד</span></div>
+        </div>
+        <div class="pay-option-desc">AI מנהל עבורך את כל המשא ומתן מול הבנק ומבטיח לך את הריבית הטובה ביותר.</div>
+        <div class="pay-option-features">
+          <span class="pay-feat-tag">✓ הצעה מלאה מהבנק</span>
+          <span class="pay-feat-tag">✓ ליווי אישי</span>
+          <span class="pay-feat-tag green">✓ חיסכון ממוצע ₪38K</span>
+        </div>
+      </button>
+
+      <div class="pay-divider">או</div>
+
+      <!-- OPTION 2: Subscription -->
+      <button class="pay-option" onclick="paySubscribe()">
+        <div class="pay-option-top">
+          <div>
+            <div class="pay-option-name">📊 מעקב + הצעה מלאה</div>
+            <span class="pay-badge" style="background:linear-gradient(135deg,#06D6A0,#118AB2);">מנוי חודשי</span>
+          </div>
+          <div class="pay-option-price">₪49<span>/חודש</span></div>
+        </div>
+        <div class="pay-option-desc">כולל הצעה מלאה מהבנק + מעקב שוטף על המשכנתא שלך והתראות אוטומטיות כשכדאי למחזר.</div>
+        <div class="pay-option-features">
+          <span class="pay-feat-tag">✓ הכל מהחד פעמי</span>
+          <span class="pay-feat-tag green">✓ התראות מחזור</span>
+          <span class="pay-feat-tag green">✓ דשבורד מעקב</span>
+          <span class="pay-feat-tag">✓ ביטול בכל עת</span>
+        </div>
+      </button>
+
+      <button class="pay-cancel" onclick="closePaySheet()">ביטול</button>
+    </div>
+  </div>
+
   <!-- ===== TOAST ===== -->
   <div class="toast" id="toastEl"></div>
 
@@ -1350,6 +1419,22 @@ function updateClock() {
 }
 updateClock();
 setInterval(updateClock, 30000);
+
+// ===== MORTGAGE PAYMENT SHEET =====
+function showPaySheet() {
+  document.getElementById('payOverlay').classList.add('open');
+}
+function closePaySheet() {
+  document.getElementById('payOverlay').classList.remove('open');
+}
+function payOnce() {
+  closePaySheet();
+  showToast('✅ תשלום של ₪500 התקבל — יועץ יחזור אליך תוך 24 שעות');
+}
+function paySubscribe() {
+  closePaySheet();
+  showToast('🎉 נרשמת למנוי ₪49/חודש — ההצעה והמעקב פעילים!');
+}
 
 // ===== TOAST =====
 var _toastTimer = null;
