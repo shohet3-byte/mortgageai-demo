@@ -1,0 +1,1283 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MortgageAI Demo</title>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --p:#4361EE;--p2:#3A0CA3;--acc:#F72585;--g1:#06D6A0;--g2:#118AB2;
+  --bg:#F8F9FF;--card:#fff;--txt:#1A1A2E;--sub:#6B7280;
+  --rad:18px;--shadow:0 4px 24px rgba(67,97,238,.13);
+}
+body{font-family:'Heebo',sans-serif;background:#1a1a2e;display:flex;justify-content:center;align-items:center;min-height:100vh;}
+#phone{width:390px;height:844px;background:var(--bg);border-radius:54px;overflow:hidden;position:relative;box-shadow:0 30px 80px rgba(0,0,0,.6),inset 0 0 0 2px rgba(255,255,255,.08);}
+#phone::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:126px;height:34px;background:#000;border-radius:0 0 22px 22px;z-index:999;}
+/* status bar */
+.sb{position:absolute;top:0;left:0;right:0;height:50px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 28px 8px;font-size:12px;font-weight:600;color:#fff;z-index:100;background:transparent;}
+.sb.dark{color:#1A1A2E;}
+.sb-r{display:flex;gap:6px;align-items:center;}
+/* screens */
+.screen{position:absolute;top:50px;left:0;right:0;bottom:0;overflow-y:auto;overflow-x:hidden;display:none;flex-direction:column;}
+.screen.active{display:flex;}
+/* ===== SPLASH ===== */
+#s-splash{background:linear-gradient(160deg,#3A0CA3 0%,#4361EE 60%,#7209B7 100%);align-items:center;justify-content:center;}
+.splash-logo{width:110px;height:110px;border-radius:28px;object-fit:contain;margin-bottom:20px;filter:drop-shadow(0 8px 24px rgba(0,0,0,.3));animation:logoIn .8s cubic-bezier(.175,.885,.32,1.275) both;}
+@keyframes logoIn{0%{transform:scale(0) rotate(-15deg);opacity:0}60%{transform:scale(1.1) rotate(3deg)}100%{transform:scale(1) rotate(0deg);opacity:1}}
+.splash-title{font-size:36px;font-weight:900;color:#fff;letter-spacing:-1px;}
+.splash-sub{font-size:14px;color:rgba(255,255,255,.7);margin-top:6px;margin-bottom:48px;}
+.pulse-ring{width:80px;height:80px;border-radius:50%;border:3px solid rgba(255,255,255,.3);position:absolute;animation:pulse 2s infinite;}
+@keyframes pulse{0%{transform:scale(1);opacity:1}100%{transform:scale(2.5);opacity:0}}
+.splash-loader{width:180px;height:4px;background:rgba(255,255,255,.2);border-radius:99px;margin-top:32px;overflow:hidden;}
+.splash-loader-bar{height:100%;background:#fff;border-radius:99px;animation:load 2.5s ease forwards;}
+@keyframes load{from{width:0}to{width:100%}}
+/* ===== ONBOARDING ===== */
+#s-onboard{background:#fff;}
+.ob-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 32px;}
+.ob-img{width:220px;height:200px;border-radius:24px;margin-bottom:32px;display:flex;align-items:center;justify-content:center;font-size:80px;}
+.ob-title{font-size:24px;font-weight:800;color:var(--txt);text-align:center;margin-bottom:12px;}
+.ob-desc{font-size:15px;color:var(--sub);text-align:center;line-height:1.7;}
+.ob-dots{display:flex;gap:8px;margin-top:32px;}
+.ob-dot{width:8px;height:8px;border-radius:50%;background:#e0e0e0;transition:.3s;}
+.ob-dot.on{width:24px;background:var(--p);}
+.ob-nav{display:flex;justify-content:space-between;align-items:center;padding:24px 32px 48px;}
+.ob-skip{font-size:14px;color:var(--sub);background:none;border:none;cursor:pointer;font-family:inherit;}
+.ob-next{background:var(--p);color:#fff;border:none;border-radius:99px;padding:14px 32px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;}
+/* ===== HOME ===== */
+#s-home{background:var(--bg);}
+.home-header{background:linear-gradient(135deg,#3A0CA3,#4361EE);padding:20px 24px 24px;border-radius:0 0 28px 28px;position:relative;z-index:1;}
+.home-greeting{font-size:13px;color:rgba(255,255,255,.75);}
+.home-name{font-size:24px;font-weight:800;color:#fff;margin-top:2px;}
+.home-badge{display:inline-block;background:rgba(255,255,255,.2);color:#fff;font-size:12px;font-weight:600;padding:4px 12px;border-radius:99px;margin-top:8px;}
+.lang-bar{display:flex;gap:8px;margin-top:16px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;}
+.lang-bar::-webkit-scrollbar{display:none}
+.lang-btn{flex:0 0 auto;background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.4);border-radius:99px;padding:7px 16px;font-size:13px;font-weight:700;color:#fff;cursor:pointer;font-family:inherit;transition:.2s;white-space:nowrap;}
+.lang-btn.sel{background:#fff;border-color:#fff;color:var(--p);}
+.lang-btn:active{transform:scale(.95);}
+.rate-ticker{background:var(--p);color:#fff;font-size:13px;margin-top:8px;}
+.rate-ticker-clip{overflow:hidden;width:100%;}
+.rt{display:inline-block;padding:0 24px;border-right:1px solid rgba(255,255,255,.3);}
+.rate-inner{display:inline-block;padding:10px 0;animation:ticker 32s linear infinite;white-space:nowrap;}
+@keyframes ticker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+.section-title{font-size:18px;font-weight:800;color:var(--txt);padding:20px 24px 12px;}
+.cards-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:0 24px 24px;}
+.card{background:var(--card);border-radius:var(--rad);padding:20px 16px;box-shadow:var(--shadow);cursor:pointer;transition:.2s;active:opacity:.8;}
+.card:active{transform:scale(.97);}
+.card-icon{font-size:32px;margin-bottom:10px;}
+.card-title{font-size:15px;font-weight:700;color:var(--txt);}
+.card-desc{font-size:12px;color:var(--sub);margin-top:4px;line-height:1.5;}
+.card.wide{grid-column:span 2;}
+.card.acc{background:linear-gradient(135deg,#F72585,#7209B7);color:#fff;}
+.card.acc .card-title,.card.acc .card-desc{color:#fff;}
+/* ===== BOTTOM NAV ===== */
+.bnav{position:sticky;bottom:0;left:0;right:0;background:#fff;display:flex;border-top:1px solid #f0f0f0;padding:8px 0 20px;z-index:50;}
+.bnav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;padding:4px 0;}
+.bnav-icon{font-size:22px;}
+.bnav-label{font-size:10px;font-weight:600;color:var(--sub);}
+.bnav-item.on .bnav-label{color:var(--p);}
+/* ===== FORMS ===== */
+.form-header{background:linear-gradient(135deg,#3A0CA3,#4361EE);padding:16px 24px 28px;color:#fff;}
+.back-btn{background:rgba(255,255,255,.2);border:none;border-radius:99px;padding:8px 16px;color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:16px;display:inline-flex;align-items:center;gap:6px;}
+.form-title{font-size:24px;font-weight:800;}
+.form-sub{font-size:14px;opacity:.8;margin-top:4px;}
+.form-body{padding:24px;flex:1;}
+.fgroup{margin-bottom:20px;}
+.flabel{font-size:13px;font-weight:700;color:var(--txt);margin-bottom:8px;display:block;}
+.finput{width:100%;background:#f4f5ff;border:2px solid transparent;border-radius:12px;padding:14px 16px;font-size:15px;font-family:inherit;color:var(--txt);outline:none;direction:rtl;}
+.finput:focus{border-color:var(--p);background:#fff;}
+select.finput{-webkit-appearance:none;appearance:none;}
+.slider-wrap{padding:8px 0;}
+.slider{width:100%;-webkit-appearance:none;appearance:none;height:6px;border-radius:99px;background:linear-gradient(to left,var(--p) 50%,#e0e6ff 50%);outline:none;}
+.slider::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:var(--p);box-shadow:0 2px 8px rgba(67,97,238,.4);cursor:pointer;}
+.slider-val{font-size:22px;font-weight:800;color:var(--p);text-align:center;margin-bottom:8px;}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;}
+.chip{background:#f0f2ff;border:2px solid transparent;border-radius:99px;padding:8px 16px;font-size:13px;font-weight:600;color:var(--p);cursor:pointer;font-family:inherit;transition:.2s;}
+.chip.sel{background:var(--p);color:#fff;border-color:var(--p);}
+.submit-btn{width:100%;background:linear-gradient(135deg,var(--p),var(--p2));color:#fff;border:none;border-radius:16px;padding:18px;font-size:17px;font-weight:800;cursor:pointer;font-family:inherit;margin-top:8px;box-shadow:0 8px 24px rgba(67,97,238,.35);}
+/* ===== AI ANIMATION ===== */
+#s-an{background:linear-gradient(160deg,#3A0CA3,#4361EE);align-items:center;justify-content:center;}
+.an-rings{position:relative;width:160px;height:160px;display:flex;align-items:center;justify-content:center;margin-bottom:32px;}
+.an-ring{position:absolute;border-radius:50%;border:2px solid rgba(255,255,255,.3);animation:pulse 2s infinite;}
+.an-ring:nth-child(1){width:80px;height:80px;}
+.an-ring:nth-child(2){width:120px;height:120px;animation-delay:.5s;}
+.an-ring:nth-child(3){width:160px;height:160px;animation-delay:1s;}
+.an-core{width:64px;height:64px;background:rgba(255,255,255,.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;z-index:1;}
+.an-title{font-size:22px;font-weight:800;color:#fff;text-align:center;}
+.an-sub{font-size:14px;color:rgba(255,255,255,.75);text-align:center;margin-top:8px;}
+.an-steps{margin-top:32px;width:80%;}
+.an-step{display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.1);border-radius:12px;padding:12px 16px;margin-bottom:10px;opacity:0;animation:fadeUp .5s ease forwards;}
+.an-step:nth-child(1){animation-delay:.3s;}
+.an-step:nth-child(2){animation-delay:.9s;}
+.an-step:nth-child(3){animation-delay:1.5s;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.an-step-icon{font-size:20px;}
+.an-step-txt{font-size:13px;color:#fff;font-weight:600;}
+/* ===== RESULTS ===== */
+.res-header{background:linear-gradient(135deg,#06D6A0,#118AB2);padding:16px 24px 28px;color:#fff;}
+.res-score{font-size:56px;font-weight:900;color:#fff;}
+.res-score-label{font-size:14px;opacity:.85;margin-top:4px;}
+.res-body{padding:20px 24px;}
+.res-card{background:var(--card);border-radius:16px;padding:20px;box-shadow:var(--shadow);margin-bottom:16px;}
+.res-card-title{font-size:14px;font-weight:700;color:var(--sub);margin-bottom:12px;}
+.bank-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid #f5f5f5;}
+.bank-row:last-child{border-bottom:none;}
+.bank-name{font-size:15px;font-weight:700;color:var(--txt);}
+.bank-rate{font-size:18px;font-weight:800;color:var(--p);}
+.bank-tag{font-size:11px;background:#f0f7ff;color:var(--p);padding:3px 8px;border-radius:99px;font-weight:600;}
+.best-tag{background:#e8fff5;color:#06D6A0;}
+.detail-btn{width:100%;background:var(--p);color:#fff;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:8px;}
+/* ===== INSURANCE ===== */
+.ins-tabs{display:flex;padding:16px 24px 0;gap:8px;background:#fff;border-bottom:2px solid #f0f0f0;}
+.ins-tab{flex:1;background:none;border:none;border-bottom:3px solid transparent;padding:10px 4px;font-size:13px;font-weight:700;color:var(--sub);cursor:pointer;font-family:inherit;text-align:center;transition:.2s;}
+.ins-tab.on{color:var(--p);border-bottom-color:var(--p);}
+.ins-pane{display:none;padding:20px 24px;}
+.ins-pane.on{display:block;}
+.ins-card{background:var(--card);border-radius:16px;padding:18px;box-shadow:var(--shadow);margin-bottom:14px;cursor:pointer;transition:.2s;}
+.ins-card:active{transform:scale(.98);}
+.ins-card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.ins-company{font-size:16px;font-weight:800;color:var(--txt);}
+.ins-price{font-size:20px;font-weight:900;color:var(--p);}
+.ins-price-label{font-size:11px;color:var(--sub);}
+.ins-features{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+.ins-feat{font-size:11px;background:#f0f7ff;color:var(--p);padding:4px 10px;border-radius:99px;font-weight:600;}
+.ins-badge{font-size:11px;background:#fff3e8;color:#ff6b35;padding:4px 10px;border-radius:99px;font-weight:700;}
+/* ===== ADS ===== */
+.ads-cats{display:flex;gap:8px;padding:16px 24px;overflow-x:auto;scrollbar-width:none;}
+.ads-cats::-webkit-scrollbar{display:none}
+.ads-cat{flex:0 0 auto;background:#fff;border:2px solid #e8ecff;border-radius:99px;padding:8px 16px;font-size:13px;font-weight:600;color:var(--sub);cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;transition:.2s;}
+.ads-cat.sel{background:var(--p);border-color:var(--p);color:#fff;}
+.ads-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:0 24px 24px;}
+.ads-card{background:var(--card);border-radius:16px;overflow:hidden;box-shadow:var(--shadow);cursor:pointer;transition:.2s;}
+.ads-card:active{transform:scale(.97);}
+.ads-img{width:100%;height:100px;display:flex;align-items:center;justify-content:center;font-size:40px;}
+.ads-info{padding:12px;}
+.ads-biz{font-size:14px;font-weight:700;color:var(--txt);}
+.ads-cat-label{font-size:11px;color:var(--sub);}
+.ads-stars{font-size:12px;color:#f59e0b;}
+/* ===== PROFILE ===== */
+.prof-header{background:linear-gradient(135deg,#3A0CA3,#4361EE);padding:20px 24px 32px;text-align:center;border-radius:0 0 28px 28px;}
+.prof-avatar{width:80px;height:80px;background:rgba(255,255,255,.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 12px;}
+.prof-name{font-size:22px;font-weight:800;color:#fff;}
+.prof-email{font-size:13px;color:rgba(255,255,255,.75);margin-top:2px;}
+.prof-body{padding:20px 24px 24px;}
+.prof-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px;}
+.prof-stat{background:var(--card);border-radius:14px;padding:16px 8px;text-align:center;box-shadow:var(--shadow);}
+.prof-stat-val{font-size:20px;font-weight:800;color:var(--p);}
+.prof-stat-label{font-size:11px;color:var(--sub);margin-top:2px;}
+.prof-section{background:var(--card);border-radius:16px;box-shadow:var(--shadow);overflow:hidden;margin-bottom:16px;}
+.prof-row{display:flex;align-items:center;gap:14px;padding:16px 20px;border-bottom:1px solid #f5f5f5;cursor:pointer;transition:.1s;}
+.prof-row:last-child{border-bottom:none;}
+.prof-row:active{background:#f8f9ff;}
+.prof-row-icon{font-size:22px;width:36px;text-align:center;}
+.prof-row-label{flex:1;font-size:15px;font-weight:600;color:var(--txt);}
+.prof-row-arrow{font-size:16px;color:#ccc;}
+/* ===== MORTGAGE CARD ===== */
+.mortgage-card{background:linear-gradient(135deg,var(--p),var(--p2));border-radius:20px;padding:20px;color:#fff;margin-bottom:20px;}
+.mc-label{font-size:12px;opacity:.8;margin-bottom:4px;}
+.mc-amount{font-size:28px;font-weight:900;}
+.mc-details{display:flex;gap:20px;margin-top:14px;}
+.mc-detail{font-size:12px;opacity:.85;}
+.mc-detail strong{display:block;font-size:15px;font-weight:700;opacity:1;}
+/* ===== ABOUT / TERMS ===== */
+.info-header{background:linear-gradient(135deg,#3A0CA3,#4361EE);padding:16px 24px 28px;color:#fff;}
+.info-body{padding:24px;flex:1;}
+.info-section{margin-bottom:24px;}
+.info-section h3{font-size:17px;font-weight:800;color:var(--txt);margin-bottom:10px;}
+.info-section p{font-size:14px;color:var(--sub);line-height:1.8;}
+.team-card{display:flex;align-items:center;gap:14px;background:var(--card);border-radius:14px;padding:16px;box-shadow:var(--shadow);margin-bottom:12px;}
+.team-avatar{width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--p),var(--acc));display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;}
+.team-name{font-size:15px;font-weight:700;color:var(--txt);}
+.team-role{font-size:12px;color:var(--sub);margin-top:2px;}
+/* ===== DETAIL ===== */
+.detail-header{background:linear-gradient(135deg,#06D6A0,#118AB2);padding:16px 24px 28px;color:#fff;}
+.detail-hero{font-size:42px;font-weight:900;}
+.detail-hero-sub{font-size:14px;opacity:.85;margin-top:4px;}
+.detail-body{padding:20px 24px;}
+.detail-section{background:var(--card);border-radius:16px;padding:20px;box-shadow:var(--shadow);margin-bottom:16px;}
+.detail-section h3{font-size:16px;font-weight:800;color:var(--txt);margin-bottom:14px;}
+.detail-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #f5f5f5;}
+.detail-row:last-child{border-bottom:none;}
+.detail-key{font-size:14px;color:var(--sub);}
+.detail-val{font-size:14px;font-weight:700;color:var(--txt);}
+.cta-btn{width:100%;background:linear-gradient(135deg,var(--p),var(--p2));color:#fff;border:none;border-radius:16px;padding:18px;font-size:17px;font-weight:800;cursor:pointer;font-family:inherit;margin-top:8px;box-shadow:0 8px 24px rgba(67,97,238,.35);}
+/* UTIL */
+.gap{height:100px;}
+.mt8{margin-top:8px;}
+/* ===== TRANSITIONS ===== */
+@keyframes slideInRight{from{transform:translateX(60px);opacity:0}to{transform:translateX(0);opacity:1}}
+.screen.active{animation:slideInRight .25s ease;}
+/* ===== WOW SAVINGS SCREEN ===== */
+#s-wow{background:linear-gradient(160deg,#06D6A0,#118AB2);align-items:center;justify-content:center;text-align:center;padding:40px 32px;}
+.wow-label{font-size:15px;color:rgba(255,255,255,.8);margin-bottom:12px;font-weight:600;}
+.wow-amount{font-size:64px;font-weight:900;color:#fff;letter-spacing:-2px;animation:popIn .6s cubic-bezier(.175,.885,.32,1.275) both;}
+@keyframes popIn{from{transform:scale(0.5);opacity:0}to{transform:scale(1);opacity:1}}
+.wow-sub{font-size:14px;color:rgba(255,255,255,.75);margin-top:8px;margin-bottom:40px;}
+.wow-compare{background:rgba(255,255,255,.15);border-radius:20px;padding:20px 24px;width:100%;margin-bottom:32px;}
+.wow-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.15);}
+.wow-row:last-child{border-bottom:none;}
+.wow-row-label{font-size:13px;color:rgba(255,255,255,.8);}
+.wow-row-val{font-size:15px;font-weight:800;color:#fff;}
+.wow-row-val.best{color:#a8ffde;}
+.wow-cta{width:100%;background:#fff;color:var(--g2);border:none;border-radius:16px;padding:18px;font-size:17px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 8px 24px rgba(0,0,0,.2);}
+/* ===== BAR CHART ===== */
+.chart-wrap{margin-top:8px;}
+.chart-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.chart-label{font-size:12px;font-weight:700;color:var(--txt);width:100px;flex-shrink:0;text-align:right;}
+.chart-bar-wrap{flex:1;background:#f0f2ff;border-radius:99px;height:24px;overflow:hidden;}
+.chart-bar{height:100%;border-radius:99px;display:flex;align-items:center;padding-right:10px;font-size:11px;font-weight:800;color:#fff;animation:growBar .8s ease forwards;transform-origin:right;}
+@keyframes growBar{from{width:0!important}to{}}
+.chart-bar.best{background:linear-gradient(90deg,#06D6A0,#118AB2);}
+.chart-bar.good{background:linear-gradient(90deg,#4361EE,#7209B7);}
+.chart-bar.avg{background:linear-gradient(90deg,#F72585,#7209B7);}
+.chart-bar.mkt{background:#ccc;}
+/* ===== DOCUMENT UPLOAD ===== */
+#s-docs .form-header{background:linear-gradient(135deg,#06D6A0,#118AB2);}
+.doc-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:20px 24px 0;}
+.doc-card{background:var(--card);border-radius:16px;padding:20px 14px;box-shadow:var(--shadow);cursor:pointer;text-align:center;border:2px solid transparent;transition:.2s;}
+.doc-card.uploaded{border-color:var(--g1);background:#f0fff9;}
+.doc-card-icon{font-size:32px;margin-bottom:10px;}
+.doc-card-title{font-size:13px;font-weight:700;color:var(--txt);}
+.doc-card-status{font-size:11px;color:var(--sub);margin-top:4px;}
+.doc-card.uploaded .doc-card-status{color:var(--g1);font-weight:700;}
+.doc-skip{background:none;border:none;font-size:14px;color:var(--sub);cursor:pointer;font-family:inherit;text-decoration:underline;display:block;text-align:center;margin:20px auto 0;}
+/* ===== FLOATING AI CHAT ===== */
+.chat-fab{position:fixed;bottom:100px;left:20px;width:52px;height:52px;background:linear-gradient(135deg,#06D6A0,#118AB2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;cursor:pointer;box-shadow:0 4px 20px rgba(6,214,160,.45);z-index:200;animation:fabPulse 2.5s infinite;}
+@keyframes fabPulse{0%,100%{box-shadow:0 4px 20px rgba(6,214,160,.45)}50%{box-shadow:0 4px 32px rgba(6,214,160,.8),0 0 0 8px rgba(6,214,160,.15)}}
+.chat-modal{position:absolute;bottom:0;left:0;right:0;background:#fff;border-radius:28px 28px 0 0;padding:0 0 20px;z-index:300;transform:translateY(100%);transition:transform .35s cubic-bezier(.4,0,.2,1);box-shadow:0 -8px 40px rgba(0,0,0,.18);}
+.chat-modal.open{transform:translateY(0);}
+.chat-modal-handle{width:40px;height:4px;background:#e0e0e0;border-radius:99px;margin:12px auto 16px;}
+.chat-modal-title{font-size:16px;font-weight:800;color:var(--txt);padding:0 20px 12px;border-bottom:1px solid #f0f0f0;}
+.chat-msgs{padding:16px 20px;display:flex;flex-direction:column;gap:10px;max-height:220px;overflow-y:auto;}
+.chat-msg{max-width:80%;padding:10px 14px;border-radius:16px;font-size:13px;line-height:1.5;}
+.chat-msg.bot{background:#f0f7ff;color:var(--txt);align-self:flex-start;border-bottom-right-radius:4px;}
+.chat-msg.user{background:var(--p);color:#fff;align-self:flex-end;border-bottom-left-radius:4px;}
+.chat-suggestions{display:flex;flex-wrap:wrap;gap:8px;padding:8px 20px 0;}
+.chat-sug{background:#f0f2ff;border:none;border-radius:99px;padding:8px 14px;font-size:12px;font-weight:600;color:var(--p);cursor:pointer;font-family:inherit;}
+/* ===== PREMIUM SCREEN ===== */
+.plan-card{border-radius:20px;padding:22px;margin-bottom:14px;position:relative;overflow:hidden;}
+.plan-card.free{background:#f8f9ff;border:2px solid #e8ecff;}
+.plan-card.pro{background:linear-gradient(135deg,#3A0CA3,#4361EE);color:#fff;}
+.plan-card.vip{background:linear-gradient(135deg,#F72585,#7209B7);color:#fff;}
+.plan-badge{position:absolute;top:14px;left:14px;background:rgba(255,255,255,.25);color:#fff;font-size:11px;font-weight:700;padding:4px 10px;border-radius:99px;}
+.plan-name{font-size:20px;font-weight:900;margin-bottom:4px;}
+.plan-price{font-size:28px;font-weight:900;}
+.plan-price span{font-size:14px;font-weight:400;opacity:.8;}
+.plan-features{margin-top:12px;display:flex;flex-direction:column;gap:6px;}
+.plan-feat{font-size:13px;display:flex;align-items:center;gap:8px;opacity:.9;}
+.plan-btn{width:100%;margin-top:16px;border:none;border-radius:12px;padding:13px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;}
+.plan-card.free .plan-btn{background:var(--p);color:#fff;}
+.plan-card.pro .plan-btn,.plan-card.vip .plan-btn{background:rgba(255,255,255,.2);color:#fff;border:2px solid rgba(255,255,255,.4);}
+/* ===== REFERRAL SCREEN ===== */
+.refer-hero{background:linear-gradient(135deg,#F72585,#7209B7);padding:20px 24px 32px;border-radius:0 0 28px 28px;text-align:center;color:#fff;}
+.refer-amount{font-size:52px;font-weight:900;}
+.refer-code-box{background:rgba(255,255,255,.15);border:2px dashed rgba(255,255,255,.5);border-radius:16px;padding:16px;margin:16px 24px 0;text-align:center;}
+.refer-code{font-size:24px;font-weight:900;color:#fff;letter-spacing:4px;}
+.refer-code-label{font-size:12px;color:rgba(255,255,255,.7);margin-top:4px;}
+.refer-progress{margin:20px 24px 0;background:#fff;border-radius:16px;padding:16px;}
+.refer-prog-title{font-size:14px;font-weight:700;color:var(--txt);margin-bottom:12px;}
+.refer-prog-track{background:#f0f2ff;border-radius:99px;height:10px;margin-bottom:8px;overflow:hidden;}
+.refer-prog-fill{height:100%;width:40%;background:linear-gradient(90deg,#F72585,#7209B7);border-radius:99px;}
+.refer-prog-labels{display:flex;justify-content:space-between;font-size:12px;color:var(--sub);}
+.share-btns{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px 24px 0;}
+.share-btn{border:none;border-radius:14px;padding:14px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;}
+/* ===== KPI SCREEN ===== */
+#s-kpi{background:linear-gradient(160deg,#1A1A2E,#3A0CA3);}
+.kpi-header{padding:20px 24px 28px;color:#fff;}
+.kpi-title{font-size:26px;font-weight:900;color:#fff;margin-top:8px;}
+.kpi-sub{font-size:14px;color:rgba(255,255,255,.7);margin-top:4px;}
+.kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:0 24px 20px;}
+.kpi-card{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:20px 16px;text-align:center;}
+.kpi-val{font-size:28px;font-weight:900;color:#fff;}
+.kpi-val span{font-size:16px;}
+.kpi-lbl{font-size:12px;color:rgba(255,255,255,.6);margin-top:4px;}
+.kpi-section{padding:0 24px 20px;}
+.kpi-section-title{font-size:14px;font-weight:700;color:rgba(255,255,255,.6);margin-bottom:12px;text-transform:uppercase;letter-spacing:1px;}
+.kpi-bar-row{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
+.kpi-bar-label{font-size:13px;color:rgba(255,255,255,.8);width:90px;flex-shrink:0;text-align:right;}
+.kpi-bar-track{flex:1;background:rgba(255,255,255,.1);border-radius:99px;height:8px;overflow:hidden;}
+.kpi-bar-fill{height:100%;border-radius:99px;animation:growBar .8s ease forwards;}
+.kpi-bar-fill.c1{background:linear-gradient(90deg,#06D6A0,#4361EE);}
+.kpi-bar-fill.c2{background:linear-gradient(90deg,#F72585,#7209B7);}
+.kpi-bar-fill.c3{background:linear-gradient(90deg,#f59e0b,#ef4444);}
+.kpi-bar-pct{font-size:12px;font-weight:700;color:rgba(255,255,255,.7);}
+</style>
+</head>
+<body>
+<div id="phone">
+  <!-- Status Bar -->
+  <div class="sb dark" id="sbar"><span id="sclock">9:41</span><div class="sb-r">📶 WiFi 🔋</div></div>
+
+  <!-- ===== SPLASH ===== -->
+  <div class="screen" id="s-splash">
+    <img src="logo.png" class="splash-logo" onerror="this.style.display='none'" alt="logo">
+    <div class="splash-title">MortgageAI</div>
+    <div class="splash-sub">חכם יותר. מהיר יותר. שקוף יותר.</div>
+    <div class="splash-loader"><div class="splash-loader-bar"></div></div>
+  </div>
+
+  <!-- ===== ONBOARDING ===== -->
+  <div class="screen" id="s-onboard">
+    <div id="ob0" style="display:flex;flex-direction:column;flex:1;">
+      <div class="ob-wrap">
+        <div class="ob-img" style="background:linear-gradient(135deg,#e8ecff,#d0d9ff);">🏠</div>
+        <div class="ob-title">ברוכים הבאים ל-MortgageAI</div>
+        <div class="ob-desc">הפלטפורמה החכמה שמשווה עבורך הצעות משכנתא מכל הבנקים בישראל — תוך שניות.</div>
+        <div class="ob-dots"><div class="ob-dot on"></div><div class="ob-dot"></div><div class="ob-dot"></div><div class="ob-dot"></div></div>
+      </div>
+      <div class="ob-nav"><button class="ob-skip" onclick="goTo('s-home')">דלג</button><button class="ob-next" onclick="obN(1)">הבא ←</button></div>
+    </div>
+    <div id="ob1" style="display:none;flex-direction:column;flex:1;">
+      <div class="ob-wrap">
+        <div class="ob-img" style="background:linear-gradient(135deg,#fff0f9,#ffd0ee);">🤖</div>
+        <div class="ob-title">AI שעובד בשבילך</div>
+        <div class="ob-desc">המנוע שלנו מנתח את הפרופיל הפיננסי שלך ומוצא את הריבית הנמוכה ביותר — מותאם אישית.</div>
+        <div class="ob-dots"><div class="ob-dot"></div><div class="ob-dot on"></div><div class="ob-dot"></div><div class="ob-dot"></div></div>
+      </div>
+      <div class="ob-nav"><button class="ob-skip" onclick="goTo('s-home')">דלג</button><button class="ob-next" onclick="obN(2)">הבא ←</button></div>
+    </div>
+    <div id="ob2" style="display:none;flex-direction:column;flex:1;">
+      <div class="ob-wrap">
+        <div class="ob-img" style="background:linear-gradient(135deg,#e8fff5,#c0f5e0);">📊</div>
+        <div class="ob-title">השוואה שקופה</div>
+        <div class="ob-desc">ראה בדיוק כמה תשלם לכל בנק, אחוזי ריבית, עמלות ותנאים — הכל במקום אחד.</div>
+        <div class="ob-dots"><div class="ob-dot"></div><div class="ob-dot"></div><div class="ob-dot on"></div><div class="ob-dot"></div></div>
+      </div>
+      <div class="ob-nav"><button class="ob-skip" onclick="goTo('s-home')">דלג</button><button class="ob-next" onclick="obN(3)">הבא ←</button></div>
+    </div>
+    <div id="ob3" style="display:none;flex-direction:column;flex:1;">
+      <div class="ob-wrap">
+        <div class="ob-img" style="background:linear-gradient(135deg,#fff8e0,#ffe8a0);">🛡️</div>
+        <div class="ob-title">ביטוח, פרסום ועוד</div>
+        <div class="ob-desc">גם ביטוח חיים, מבנה ותכולה — ושוק של בעלי מקצוע לשיפוצים, עיצוב ועוד.</div>
+        <div class="ob-dots"><div class="ob-dot"></div><div class="ob-dot"></div><div class="ob-dot"></div><div class="ob-dot on"></div></div>
+      </div>
+      <div class="ob-nav"><button class="ob-skip" onclick="goTo('s-home')">דלג</button><button class="ob-next" onclick="goTo('s-home')" style="background:var(--g1);">התחל! 🚀</button></div>
+    </div>
+  </div>
+
+  <!-- ===== LANGUAGE SELECT ===== -->
+  <div class="screen active" id="s-lang" style="background:linear-gradient(160deg,#3A0CA3 0%,#4361EE 60%,#7209B7 100%);align-items:center;justify-content:center;">
+    <img src="logo.png" style="width:70px;height:70px;border-radius:20px;object-fit:contain;margin-bottom:16px;filter:drop-shadow(0 4px 16px rgba(0,0,0,.3));" onerror="this.style.display='none'" alt="">
+    <div style="font-size:22px;font-weight:900;color:#fff;margin-bottom:6px;">בחר שפה</div>
+    <div style="font-size:13px;color:rgba(255,255,255,.7);margin-bottom:40px;">Choose your language</div>
+    <div style="display:flex;flex-direction:column;gap:14px;width:75%;">
+      <button onclick="sL(this);startSplash()" style="background:#fff;border:none;border-radius:16px;padding:16px 24px;font-size:16px;font-weight:700;color:var(--p);cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:14px;box-shadow:0 4px 20px rgba(0,0,0,.2);">🇮🇱 <span>עברית</span></button>
+      <button onclick="sL(this);startSplash()" style="background:rgba(255,255,255,.15);border:2px solid rgba(255,255,255,.4);border-radius:16px;padding:16px 24px;font-size:16px;font-weight:700;color:#fff;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:14px;">🇺🇸 <span>English</span></button>
+      <button onclick="sL(this);startSplash()" style="background:rgba(255,255,255,.15);border:2px solid rgba(255,255,255,.4);border-radius:16px;padding:16px 24px;font-size:16px;font-weight:700;color:#fff;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:14px;">🇸🇦 <span>عربي</span></button>
+      <button onclick="sL(this);startSplash()" style="background:rgba(255,255,255,.15);border:2px solid rgba(255,255,255,.4);border-radius:16px;padding:16px 24px;font-size:16px;font-weight:700;color:#fff;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:14px;">🇷🇺 <span>Русский</span></button>
+    </div>
+  </div>
+
+  <!-- ===== HOME ===== -->
+  <div class="screen" id="s-home">
+    <div class="home-header">
+      <div class="home-greeting">שלום, אייל 👋</div>
+      <div class="home-name">מה נחפש היום?</div>
+      <div class="home-badge">✨ AI משכנתא מתקדם</div>
+    </div>
+    <div class="rate-ticker"><div class="rate-ticker-clip"><div class="rate-inner"><span class="rt">📈 פריים: 6.0%</span><span class="rt">🏦 הלוואת בלון: 5.2%</span><span class="rt">📊 מדד: 0.3%</span><span class="rt">💰 ממוצע משכנתא: 1.25M ₪</span><span class="rt">🔥 ריבית בנק לאומי: 4.85%</span><span class="rt">✅ אישור עקרוני ממוצע: 3 ימים</span><span class="rt">📈 פריים: 6.0%</span><span class="rt">🏦 הלוואת בלון: 5.2%</span><span class="rt">📊 מדד: 0.3%</span><span class="rt">💰 ממוצע משכנתא: 1.25M ₪</span><span class="rt">🔥 ריבית בנק לאומי: 4.85%</span><span class="rt">✅ אישור עקרוני ממוצע: 3 ימים</span></div></div></div>
+    <div class="section-title">שירותים</div>
+    <div class="cards-grid">
+      <div class="card" onclick="goTo('s-pm')">
+        <div class="card-icon">🏠</div>
+        <div class="card-title">משכנתא פרטית</div>
+        <div class="card-desc">השוואה מלאה מכל הבנקים</div>
+      </div>
+      <div class="card" onclick="goTo('s-bm')">
+        <div class="card-icon">🏢</div>
+        <div class="card-title">משכנתא עסקית</div>
+        <div class="card-desc">מימון לנדל"ן עסקי</div>
+      </div>
+      <div class="card" onclick="goTo('s-pl')">
+        <div class="card-icon">💳</div>
+        <div class="card-title">הלוואות פרטיות</div>
+        <div class="card-desc">בנקים + חברות אשראי</div>
+      </div>
+      <div class="card" onclick="goTo('s-ins')">
+        <div class="card-icon">🛡️</div>
+        <div class="card-title">ביטוח</div>
+        <div class="card-desc">חיים, מבנה ותכולה</div>
+      </div>
+      <div class="card wide acc" onclick="goTo('s-ads')">
+        <div class="card-icon">🔨</div>
+        <div class="card-title">שוק בעלי מקצוע</div>
+        <div class="card-desc">שיפוצים, עיצוב, חשמל, אינסטלציה ועוד</div>
+      </div>
+    </div>
+    <div class="gap"></div>
+    <div class="bnav">
+      <div class="bnav-item on"><div class="bnav-icon">🏠</div><div class="bnav-label">בית</div></div>
+      <div class="bnav-item" onclick="goTo('s-ins')"><div class="bnav-icon">🛡️</div><div class="bnav-label">ביטוח</div></div>
+      <div class="bnav-item" onclick="goTo('s-ads')"><div class="bnav-icon">🔨</div><div class="bnav-label">שוק</div></div>
+      <div class="bnav-item" onclick="goTo('s-profile')"><div class="bnav-icon">👤</div><div class="bnav-label">פרופיל</div></div>
+    </div>
+  </div>
+
+  <!-- ===== PRIVATE MORTGAGE ===== -->
+  <div class="screen" id="s-pm">
+    <div class="form-header">
+      <button class="back-btn" onclick="goTo('s-home')">‹ חזרה</button>
+      <div class="form-title">משכנתא פרטית</div>
+      <div class="form-sub">מלא את הפרטים ו-AI ימצא את הטוב ביותר</div>
+    </div>
+    <div class="form-body">
+      <div class="fgroup">
+        <label class="flabel">שווי הנכס (₪)</label>
+        <div class="slider-val" id="pm-pv">1,500,000 ₪</div>
+        <div class="slider-wrap"><input type="range" class="slider" min="500000" max="5000000" step="50000" value="1500000" oninput="upd(this,'pm-pv','₪',1)"></div>
+      </div>
+      <div class="fgroup">
+        <label class="flabel">סכום ההלוואה (₪)</label>
+        <div class="slider-val" id="pm-lv">900,000 ₪</div>
+        <div class="slider-wrap"><input type="range" class="slider" min="100000" max="4000000" step="50000" value="900000" oninput="upd(this,'pm-lv','₪',1)"></div>
+      </div>
+      <div class="fgroup">
+        <label class="flabel">תקופת ההלוואה</label>
+        <div class="slider-val" id="pm-tv">20 שנה</div>
+        <div class="slider-wrap"><input type="range" class="slider" min="5" max="30" step="1" value="20" oninput="upd(this,'pm-tv',' שנה')"></div>
+      </div>
+      <div class="fgroup">
+        <label class="flabel">הכנסה חודשית (₪)</label>
+        <input type="text" class="finput" placeholder="לדוגמה: 18,000" value="18,000">
+      </div>
+      <div class="fgroup">
+        <label class="flabel">מסלול ריבית מועדף</label>
+        <div class="chips">
+          <button class="chip sel" onclick="sc(this)">פריים</button>
+          <button class="chip" onclick="sc(this)">קבועה</button>
+          <button class="chip" onclick="sc(this)">משתנה</button>
+          <button class="chip" onclick="sc(this)">מדד</button>
+        </div>
+      </div>
+      <div class="fgroup">
+        <label class="flabel">מטרת הרכישה</label>
+        <select class="finput">
+          <option>דירה ראשונה</option>
+          <option>דירה שנייה</option>
+          <option>השקעה</option>
+          <option>שיפור דיור</option>
+        </select>
+      </div>
+      <button class="submit-btn" onclick="goTo('s-docs')">הבא — העלאת מסמכים 📎</button>
+    </div>
+  </div>
+
+  <!-- ===== BUSINESS MORTGAGE ===== -->
+  <div class="screen" id="s-bm">
+    <div class="form-header" style="background:linear-gradient(135deg,#7209B7,#3A0CA3);">
+      <button class="back-btn" onclick="goTo('s-home')">‹ חזרה</button>
+      <div class="form-title">משכנתא עסקית</div>
+      <div class="form-sub">מימון לנדל"ן מסחרי ועסקי</div>
+    </div>
+    <div class="form-body">
+      <div class="fgroup">
+        <label class="flabel">סוג הנכס העסקי</label>
+        <div class="chips">
+          <button class="chip sel" onclick="sc(this)">משרד</button>
+          <button class="chip" onclick="sc(this)">מחסן</button>
+          <button class="chip" onclick="sc(this)">קמעונאות</button>
+          <button class="chip" onclick="sc(this)">תעשייה</button>
+        </div>
+      </div>
+      <div class="fgroup">
+        <label class="flabel">שווי הנכס (₪)</label>
+        <div class="slider-val" id="bm-pv">3,000,000 ₪</div>
+        <div class="slider-wrap"><input type="range" class="slider" min="500000" max="20000000" step="100000" value="3000000" oninput="upd(this,'bm-pv','₪',1)"></div>
+      </div>
+      <div class="fgroup">
+        <label class="flabel">סכום המימון (₪)</label>
+        <div class="slider-val" id="bm-lv">2,000,000 ₪</div>
+        <div class="slider-wrap"><input type="range" class="slider" min="200000" max="15000000" step="100000" value="2000000" oninput="upd(this,'bm-lv','₪',1)"></div>
+      </div>
+      <div class="fgroup">
+        <label class="flabel">תקופת ההלוואה</label>
+        <div class="slider-val" id="bm-tv">15 שנה</div>
+        <div class="slider-wrap"><input type="range" class="slider" min="3" max="25" step="1" value="15" oninput="upd(this,'bm-tv',' שנה')"></div>
+      </div>
+      <div class="fgroup">
+        <label class="flabel">מחזור עסקי שנתי (₪)</label>
+        <input type="text" class="finput" placeholder="לדוגמה: 2,000,000">
+      </div>
+      <div class="fgroup">
+        <label class="flabel">גיל העסק</label>
+        <select class="finput">
+          <option>פחות משנה</option>
+          <option>1-3 שנים</option>
+          <option>3-5 שנים</option>
+          <option>מעל 5 שנים</option>
+        </select>
+      </div>
+      <button class="submit-btn" onclick="analyze('s-rb')" style="background:linear-gradient(135deg,#7209B7,#3A0CA3);">🤖 נתח עם AI</button>
+    </div>
+  </div>
+
+  <!-- ===== PRIVATE LOAN ===== -->
+  <div class="screen" id="s-pl">
+    <div class="form-header" style="background:linear-gradient(135deg,#F72585,#7209B7);">
+      <button class="back-btn" onclick="goTo('s-home')">‹ חזרה</button>
+      <div class="form-title">הלוואות פרטיות</div>
+      <div class="form-sub">בנקים + חברות אשראי + חברות מימון</div>
+    </div>
+    <div class="form-body">
+      <div class="fgroup">
+        <label class="flabel">סכום ההלוואה (₪)</label>
+        <div class="slider-val" id="pl-lv">50,000 ₪</div>
+        <div class="slider-wrap"><input type="range" class="slider" min="5000" max="500000" step="5000" value="50000" oninput="upd(this,'pl-lv','₪',1)"></div>
+      </div>
+      <div class="fgroup">
+        <label class="flabel">תקופת ההחזר</label>
+        <div class="slider-val" id="pl-tv">36 חודשים</div>
+        <div class="slider-wrap"><input type="range" class="slider" min="6" max="84" step="6" value="36" oninput="upd(this,'pl-tv',' חודשים')"></div>
+      </div>
+      <div class="fgroup">
+        <label class="flabel">מטרת ההלוואה</label>
+        <div class="chips">
+          <button class="chip sel" onclick="sc(this)">שיפוץ</button>
+          <button class="chip" onclick="sc(this)">רכב</button>
+          <button class="chip" onclick="sc(this)">חתונה</button>
+          <button class="chip" onclick="sc(this)">לימודים</button>
+          <button class="chip" onclick="sc(this)">אחר</button>
+        </div>
+      </div>
+      <div class="fgroup">
+        <label class="flabel">הכנסה חודשית נטו (₪)</label>
+        <input type="text" class="finput" placeholder="לדוגמה: 12,000" value="12,000">
+      </div>
+      <div class="fgroup">
+        <label class="flabel">מקורות מימון</label>
+        <div class="chips">
+          <button class="chip sel" onclick="sc(this)">בנקים</button>
+          <button class="chip sel" onclick="sc(this)">אשראי</button>
+          <button class="chip" onclick="sc(this)">P2P</button>
+          <button class="chip" onclick="sc(this)">מוסדיים</button>
+        </div>
+      </div>
+      <button class="submit-btn" onclick="analyze('s-rl')" style="background:linear-gradient(135deg,#F72585,#7209B7);">🤖 נתח עם AI</button>
+    </div>
+  </div>
+
+  <!-- ===== AI ANALYSIS ===== -->
+  <div class="screen" id="s-an">
+    <div class="an-rings">
+      <div class="an-ring"></div><div class="an-ring"></div><div class="an-ring"></div>
+      <div class="an-core">🤖</div>
+    </div>
+    <div class="an-title">AI מנתח את הפרופיל שלך</div>
+    <div class="an-sub">מושך נתונים מ-12 מוסדות פיננסיים</div>
+    <div class="an-steps">
+      <div class="an-step"><div class="an-step-icon">📊</div><div class="an-step-txt">בודק דירוג אשראי...</div></div>
+      <div class="an-step"><div class="an-step-icon">🏦</div><div class="an-step-txt">שולח בקשות לבנקים...</div></div>
+      <div class="an-step"><div class="an-step-icon">✅</div><div class="an-step-txt">מייצר הצעות מותאמות...</div></div>
+    </div>
+  </div>
+
+  <!-- ===== WOW SAVINGS SCREEN ===== -->
+  <div class="screen" id="s-wow">
+    <div class="wow-label">🎉 AI מצא את ההצעה הטובה ביותר!</div>
+    <div class="wow-amount" id="wowNum">₪38,400</div>
+    <div class="wow-sub">חיסכון לאורך חיי ההלוואה לעומת ממוצע השוק</div>
+    <div class="wow-compare">
+      <div class="wow-row"><span class="wow-row-label">ריבית מומלצת</span><span class="wow-row-val best">4.85% — בנק לאומי</span></div>
+      <div class="wow-row"><span class="wow-row-label">ממוצע השוק</span><span class="wow-row-val">5.85%</span></div>
+      <div class="wow-row"><span class="wow-row-label">החזר חודשי</span><span class="wow-row-val best">4,720 ₪</span></div>
+      <div class="wow-row"><span class="wow-row-label">ציון התאמה</span><span class="wow-row-val best">92 / 100</span></div>
+    </div>
+    <button class="wow-cta" id="wowCta" onclick="goTo('s-rp')">ראה את כל ההצעות ←</button>
+  </div>
+
+  <!-- ===== DOCUMENT UPLOAD ===== -->
+  <div class="screen" id="s-docs">
+    <div class="form-header" style="background:linear-gradient(135deg,#06D6A0,#118AB2);">
+      <button class="back-btn" onclick="goTo('s-pm')">‹ חזרה</button>
+      <div class="form-title">העלאת מסמכים</div>
+      <div class="form-sub">תוצאות מדויקות יותר עם מסמכים</div>
+    </div>
+    <div class="doc-grid">
+      <div class="doc-card" id="doc0" onclick="uploadDoc(0)"><div class="doc-card-icon">📄</div><div class="doc-card-title">תלוש שכר</div><div class="doc-card-status" id="ds0">לחץ להעלאה</div></div>
+      <div class="doc-card" id="doc1" onclick="uploadDoc(1)"><div class="doc-card-icon">📋</div><div class="doc-card-title">חוזה עבודה</div><div class="doc-card-status" id="ds1">לחץ להעלאה</div></div>
+      <div class="doc-card" id="doc2" onclick="uploadDoc(2)"><div class="doc-card-icon">🏦</div><div class="doc-card-title">דפי חשבון</div><div class="doc-card-status" id="ds2">לחץ להעלאה</div></div>
+      <div class="doc-card" id="doc3" onclick="uploadDoc(3)"><div class="doc-card-icon">🏠</div><div class="doc-card-title">חוזה נכס</div><div class="doc-card-status" id="ds3">לחץ להעלאה</div></div>
+    </div>
+    <div style="padding:24px;">
+      <div style="background:#f0f7ff;border-radius:14px;padding:16px;margin-bottom:20px;">
+        <div style="font-size:13px;font-weight:700;color:var(--p);margin-bottom:4px;">🔒 מאובטח ומוצפן</div>
+        <div style="font-size:12px;color:var(--sub);line-height:1.6;">המסמכים מועברים בהצפנה מלאה ונמחקים לאחר הניתוח. לא נשמר מידע אישי.</div>
+      </div>
+      <button class="submit-btn" style="background:linear-gradient(135deg,#06D6A0,#118AB2);" onclick="analyze('s-rp')">🤖 נתח עם AI ←</button>
+    </div>
+    <button class="doc-skip" onclick="analyze('s-rp')">דלג — נתח ללא מסמכים</button>
+  </div>
+
+  <!-- ===== KPI SCREEN ===== -->
+  <div class="screen" id="s-kpi">
+    <div class="kpi-header">
+      <button class="back-btn" onclick="goTo('s-about')">‹ חזרה</button>
+      <div class="kpi-title">MortgageAI במספרים</div>
+      <div class="kpi-sub">נתוני אמת · עודכן אפריל 2026</div>
+    </div>
+    <div class="kpi-grid">
+      <div class="kpi-card"><div class="kpi-val">52<span>K</span></div><div class="kpi-lbl">משתמשים פעילים</div></div>
+      <div class="kpi-card"><div class="kpi-val">₪2.3<span>B</span></div><div class="kpi-lbl">מימון עובר</div></div>
+      <div class="kpi-card"><div class="kpi-val">₪41<span>K</span></div><div class="kpi-lbl">חיסכון ממוצע</div></div>
+      <div class="kpi-card"><div class="kpi-val">98<span>%</span></div><div class="kpi-lbl">שביעות רצון</div></div>
+      <div class="kpi-card"><div class="kpi-val">12</div><div class="kpi-lbl">בנקים מחוברים</div></div>
+      <div class="kpi-card"><div class="kpi-val">3<span>min</span></div><div class="kpi-lbl">זמן ניתוח ממוצע</div></div>
+    </div>
+    <div class="kpi-section">
+      <div class="kpi-section-title">צמיחה חודשית</div>
+      <div class="kpi-bar-row"><span class="kpi-bar-label">משתמשים</span><div class="kpi-bar-track"><div class="kpi-bar-fill c1" style="width:85%"></div></div><span class="kpi-bar-pct">+85%</span></div>
+      <div class="kpi-bar-row"><span class="kpi-bar-label">עסקאות</span><div class="kpi-bar-track"><div class="kpi-bar-fill c2" style="width:72%"></div></div><span class="kpi-bar-pct">+72%</span></div>
+      <div class="kpi-bar-row"><span class="kpi-bar-label">הכנסות</span><div class="kpi-bar-track"><div class="kpi-bar-fill c3" style="width:91%"></div></div><span class="kpi-bar-pct">+91%</span></div>
+    </div>
+    <div class="kpi-section">
+      <div class="kpi-section-title">פלחי שוק</div>
+      <div class="kpi-bar-row"><span class="kpi-bar-label">דירה ראשונה</span><div class="kpi-bar-track"><div class="kpi-bar-fill c1" style="width:60%"></div></div><span class="kpi-bar-pct">60%</span></div>
+      <div class="kpi-bar-row"><span class="kpi-bar-label">משפרי דיור</span><div class="kpi-bar-track"><div class="kpi-bar-fill c2" style="width:28%"></div></div><span class="kpi-bar-pct">28%</span></div>
+      <div class="kpi-bar-row"><span class="kpi-bar-label">השקעות</span><div class="kpi-bar-track"><div class="kpi-bar-fill c3" style="width:12%"></div></div><span class="kpi-bar-pct">12%</span></div>
+    </div>
+    <div class="gap"></div>
+  </div>
+
+  <!-- ===== RESULTS - PRIVATE MORTGAGE ===== -->
+  <div class="screen" id="s-rp">
+    <div class="res-header">
+      <button class="back-btn" onclick="goTo('s-pm')">‹ חזרה</button>
+      <div class="res-score">92</div>
+      <div class="res-score-label">ציון התאמה | נמצאו 8 הצעות</div>
+    </div>
+    <div class="res-body">
+      <div class="res-card">
+        <div class="res-card-title">🏆 ההצעות הטובות ביותר</div>
+        <div class="bank-row"><div><div class="bank-name">One Zero 🏆</div><div style="display:flex;gap:6px;margin-top:4px;"><span class="bank-tag best-tag">מומלץ ✓</span><span class="bank-tag">דיגיטלי</span></div></div><div style="text-align:left;"><div class="bank-rate">4.75%</div><div style="font-size:12px;color:var(--sub);">4,660 ₪/חודש</div></div></div>
+        <div class="bank-row"><div><div class="bank-name">בנק לאומי</div><div style="display:flex;gap:6px;margin-top:4px;"><span class="bank-tag">פריים+0.8%</span></div></div><div style="text-align:left;"><div class="bank-rate">4.85%</div><div style="font-size:12px;color:var(--sub);">4,720 ₪/חודש</div></div></div>
+        <div class="bank-row"><div><div class="bank-name">Pepper</div><div style="display:flex;gap:6px;margin-top:4px;"><span class="bank-tag">דיגיטלי</span></div></div><div style="text-align:left;"><div class="bank-rate">4.95%</div><div style="font-size:12px;color:var(--sub);">4,790 ₪/חודש</div></div></div>
+        <div class="bank-row"><div><div class="bank-name">בנק הפועלים</div><div style="display:flex;gap:6px;margin-top:4px;"><span class="bank-tag">פריים+1.1%</span></div></div><div style="text-align:left;"><div class="bank-rate">5.10%</div><div style="font-size:12px;color:var(--sub);">4,890 ₪/חודש</div></div></div>
+        <div class="bank-row"><div><div class="bank-name">מזרחי טפחות</div><div style="display:flex;gap:6px;margin-top:4px;"><span class="bank-tag">קבועה</span></div></div><div style="text-align:left;"><div class="bank-rate">5.35%</div><div style="font-size:12px;color:var(--sub);">5,010 ₪/חודש</div></div></div>
+        <button class="detail-btn" onclick="goTo('s-dp')">צפה בפרטים מלאים ←</button>
+      </div>
+      <div class="res-card">
+        <div class="res-card-title">📊 השוואה ויזואלית</div>
+        <div class="chart-wrap">
+          <div class="chart-row"><span class="chart-label">One Zero</span><div class="chart-bar-wrap"><div class="chart-bar best" style="width:82%">4.75%</div></div></div>
+          <div class="chart-row"><span class="chart-label">בנק לאומי</span><div class="chart-bar-wrap"><div class="chart-bar best" style="width:78%">4.85%</div></div></div>
+          <div class="chart-row"><span class="chart-label">Pepper</span><div class="chart-bar-wrap"><div class="chart-bar good" style="width:74%">4.95%</div></div></div>
+          <div class="chart-row"><span class="chart-label">בנק הפועלים</span><div class="chart-bar-wrap"><div class="chart-bar good" style="width:68%">5.10%</div></div></div>
+          <div class="chart-row"><span class="chart-label">מזרחי טפחות</span><div class="chart-bar-wrap"><div class="chart-bar avg" style="width:55%">5.35%</div></div></div>
+          <div class="chart-row"><span class="chart-label">ממוצע שוק</span><div class="chart-bar-wrap"><div class="chart-bar mkt" style="width:40%">5.85%</div></div></div>
+        </div>
+      </div>
+      <div class="res-card">
+        <div class="res-card-title">💡 המלצת AI</div>
+        <p style="font-size:14px;color:var(--sub);line-height:1.8;">על בסיס הפרופיל הפיננסי שלך, One Zero מציע את העסקה הטובה ביותר. החיסכון לעומת הממוצע: <strong style="color:var(--g1);">₪41,760</strong> לאורך חיי ההלוואה.</p>
+      </div>
+    </div>
+    <div class="gap"></div>
+    <div class="bnav">
+      <div class="bnav-item" onclick="goTo('s-home')"><div class="bnav-icon">🏠</div><div class="bnav-label">בית</div></div>
+      <div class="bnav-item" onclick="goTo('s-ins')"><div class="bnav-icon">🛡️</div><div class="bnav-label">ביטוח</div></div>
+      <div class="bnav-item" onclick="goTo('s-ads')"><div class="bnav-icon">🔨</div><div class="bnav-label">שוק</div></div>
+      <div class="bnav-item" onclick="goTo('s-profile')"><div class="bnav-icon">👤</div><div class="bnav-label">פרופיל</div></div>
+    </div>
+  </div>
+
+  <!-- ===== RESULTS - BUSINESS MORTGAGE ===== -->
+  <div class="screen" id="s-rb">
+    <div class="res-header" style="background:linear-gradient(135deg,#7209B7,#3A0CA3);">
+      <button class="back-btn" onclick="goTo('s-bm')">‹ חזרה</button>
+      <div class="res-score">87</div>
+      <div class="res-score-label">ציון התאמה | נמצאו 6 הצעות</div>
+    </div>
+    <div class="res-body">
+      <div class="res-card">
+        <div class="res-card-title">🏆 הצעות למשכנתא עסקית</div>
+        <div class="bank-row"><div><div class="bank-name">בנק הפועלים עסקים</div><div style="display:flex;gap:6px;margin-top:4px;"><span class="bank-tag best-tag">מומלץ ✓</span><span class="bank-tag">פריים+1.5%</span></div></div><div style="text-align:left;"><div class="bank-rate">5.50%</div><div style="font-size:12px;color:var(--sub);">11,200 ₪/חודש</div></div></div>
+        <div class="bank-row"><div><div class="bank-name">בנק לאומי עסקים</div><div style="display:flex;gap:6px;margin-top:4px;"><span class="bank-tag">קבועה</span></div></div><div style="text-align:left;"><div class="bank-rate">5.75%</div><div style="font-size:12px;color:var(--sub);">11,650 ₪/חודש</div></div></div>
+        <div class="bank-row"><div><div class="bank-name">First International</div><div style="display:flex;gap:6px;margin-top:4px;"><span class="bank-tag">משתנה</span></div></div><div style="text-align:left;"><div class="bank-rate">5.90%</div><div style="font-size:12px;color:var(--sub);">11,920 ₪/חודש</div></div></div>
+        <button class="detail-btn" onclick="goTo('s-db')" style="background:linear-gradient(135deg,#7209B7,#3A0CA3);">צפה בפרטים מלאים ←</button>
+      </div>
+    </div>
+    <div class="gap"></div>
+    <div class="bnav">
+      <div class="bnav-item" onclick="goTo('s-home')"><div class="bnav-icon">🏠</div><div class="bnav-label">בית</div></div>
+      <div class="bnav-item" onclick="goTo('s-ins')"><div class="bnav-icon">🛡️</div><div class="bnav-label">ביטוח</div></div>
+      <div class="bnav-item" onclick="goTo('s-ads')"><div class="bnav-icon">🔨</div><div class="bnav-label">שוק</div></div>
+      <div class="bnav-item" onclick="goTo('s-profile')"><div class="bnav-icon">👤</div><div class="bnav-label">פרופיל</div></div>
+    </div>
+  </div>
+
+  <!-- ===== RESULTS - PRIVATE LOAN ===== -->
+  <div class="screen" id="s-rl">
+    <div class="res-header" style="background:linear-gradient(135deg,#F72585,#7209B7);">
+      <button class="back-btn" onclick="goTo('s-pl')">‹ חזרה</button>
+      <div class="res-score">94</div>
+      <div class="res-score-label">ציון התאמה | נמצאו 11 הצעות</div>
+    </div>
+    <div class="res-body">
+      <div class="res-card">
+        <div class="res-card-title">🏆 הלוואות פרטיות - הטובות ביותר</div>
+        <div class="bank-row"><div><div class="bank-name">Max הלוואות</div><div style="display:flex;gap:6px;margin-top:4px;"><span class="bank-tag best-tag">מומלץ ✓</span><span class="bank-tag">ריבית קבועה</span></div></div><div style="text-align:left;"><div class="bank-rate">6.90%</div><div style="font-size:12px;color:var(--sub);">1,540 ₪/חודש</div></div></div>
+        <div class="bank-row"><div><div class="bank-name">כאל פיננסים</div><div style="display:flex;gap:6px;margin-top:4px;"><span class="bank-tag">ריבית משתנה</span></div></div><div style="text-align:left;"><div class="bank-rate">7.50%</div><div style="font-size:12px;color:var(--sub);">1,580 ₪/חודש</div></div></div>
+        <div class="bank-row"><div><div class="bank-name">בנק לאומי</div><div style="display:flex;gap:6px;margin-top:4px;"><span class="bank-tag">בנקאי</span></div></div><div style="text-align:left;"><div class="bank-rate">7.90%</div><div style="font-size:12px;color:var(--sub);">1,610 ₪/חודש</div></div></div>
+        <div class="bank-row"><div><div class="bank-name">ישראכרט</div><div style="display:flex;gap:6px;margin-top:4px;"><span class="bank-tag">אשראי</span></div></div><div style="text-align:left;"><div class="bank-rate">8.20%</div><div style="font-size:12px;color:var(--sub);">1,640 ₪/חודש</div></div></div>
+        <button class="detail-btn" onclick="goTo('s-dl')" style="background:linear-gradient(135deg,#F72585,#7209B7);">צפה בפרטים מלאים ←</button>
+      </div>
+    </div>
+    <div class="gap"></div>
+    <div class="bnav">
+      <div class="bnav-item" onclick="goTo('s-home')"><div class="bnav-icon">🏠</div><div class="bnav-label">בית</div></div>
+      <div class="bnav-item" onclick="goTo('s-ins')"><div class="bnav-icon">🛡️</div><div class="bnav-label">ביטוח</div></div>
+      <div class="bnav-item" onclick="goTo('s-ads')"><div class="bnav-icon">🔨</div><div class="bnav-label">שוק</div></div>
+      <div class="bnav-item" onclick="goTo('s-profile')"><div class="bnav-icon">👤</div><div class="bnav-label">פרופיל</div></div>
+    </div>
+  </div>
+
+  <!-- ===== INSURANCE ===== -->
+  <div class="screen" id="s-ins">
+    <div class="form-header" style="background:linear-gradient(135deg,#06D6A0,#118AB2);">
+      <button class="back-btn" onclick="goTo('s-home')">‹ חזרה</button>
+      <div class="form-title">השוואת ביטוחים</div>
+      <div class="form-sub">מנורה • הראל • מגדל • כלל • הפניקס</div>
+    </div>
+    <div class="ins-tabs">
+      <button class="ins-tab on" onclick="insTab(0)">חיים</button>
+      <button class="ins-tab" onclick="insTab(1)">מבנה</button>
+      <button class="ins-tab" onclick="insTab(2)">תכולה</button>
+    </div>
+    <!-- LIFE -->
+    <div class="ins-pane on" id="ins0" style="overflow-y:auto;flex:1;">
+      <div class="ins-card" onclick="goTo('s-di')"><div class="ins-card-head"><div><div class="ins-company">מנורה מבטחים</div><div class="ins-price-label">ביטוח חיים</div></div><div style="text-align:left;"><div class="ins-price">₪89</div><div class="ins-price-label">/חודש</div></div></div><div class="ins-features"><span class="ins-feat">כיסוי 1M ₪</span><span class="ins-feat">ללא המתנה</span><span class="ins-badge">מומלץ ⭐</span></div></div>
+      <div class="ins-card" onclick="goTo('s-di')"><div class="ins-card-head"><div><div class="ins-company">הראל ביטוח</div><div class="ins-price-label">ביטוח חיים</div></div><div style="text-align:left;"><div class="ins-price">₪95</div><div class="ins-price-label">/חודש</div></div></div><div class="ins-features"><span class="ins-feat">כיסוי 1M ₪</span><span class="ins-feat">נכות</span><span class="ins-feat">מחלה קשה</span></div></div>
+      <div class="ins-card" onclick="goTo('s-di')"><div class="ins-card-head"><div><div class="ins-company">מגדל ביטוח</div><div class="ins-price-label">ביטוח חיים</div></div><div style="text-align:left;"><div class="ins-price">₪102</div><div class="ins-price-label">/חודש</div></div></div><div class="ins-features"><span class="ins-feat">כיסוי 1.5M ₪</span><span class="ins-feat">פרמיום</span></div></div>
+      <div class="ins-card" onclick="goTo('s-di')"><div class="ins-card-head"><div><div class="ins-company">כלל ביטוח</div><div class="ins-price-label">ביטוח חיים</div></div><div style="text-align:left;"><div class="ins-price">₪85</div><div class="ins-price-label">/חודש</div></div></div><div class="ins-features"><span class="ins-feat">כיסוי 800K ₪</span><span class="ins-feat">בסיסי</span></div></div>
+      <div class="ins-card" onclick="goTo('s-di')"><div class="ins-card-head"><div><div class="ins-company">הפניקס</div><div class="ins-price-label">ביטוח חיים</div></div><div style="text-align:left;"><div class="ins-price">₪91</div><div class="ins-price-label">/חודש</div></div></div><div class="ins-features"><span class="ins-feat">כיסוי 1M ₪</span><span class="ins-feat">גמיש</span></div></div>
+      <div class="gap"></div>
+    </div>
+    <!-- STRUCTURE -->
+    <div class="ins-pane" id="ins1" style="overflow-y:auto;flex:1;">
+      <div class="ins-card" onclick="goTo('s-di')"><div class="ins-card-head"><div><div class="ins-company">מנורה מבטחים</div><div class="ins-price-label">ביטוח מבנה</div></div><div style="text-align:left;"><div class="ins-price">₪145</div><div class="ins-price-label">/חודש</div></div></div><div class="ins-features"><span class="ins-feat">כיסוי מלא</span><span class="ins-feat">רעידת אדמה</span><span class="ins-badge">מומלץ ⭐</span></div></div>
+      <div class="ins-card" onclick="goTo('s-di')"><div class="ins-card-head"><div><div class="ins-company">הראל ביטוח</div><div class="ins-price-label">ביטוח מבנה</div></div><div style="text-align:left;"><div class="ins-price">₪158</div><div class="ins-price-label">/חודש</div></div></div><div class="ins-features"><span class="ins-feat">כיסוי מורחב</span><span class="ins-feat">נזקי מים</span></div></div>
+      <div class="ins-card" onclick="goTo('s-di')"><div class="ins-card-head"><div><div class="ins-company">מגדל ביטוח</div><div class="ins-price-label">ביטוח מבנה</div></div><div style="text-align:left;"><div class="ins-price">₪172</div><div class="ins-price-label">/חודש</div></div></div><div class="ins-features"><span class="ins-feat">VIP</span><span class="ins-feat">שמאות מהירה</span></div></div>
+      <div class="ins-card" onclick="goTo('s-di')"><div class="ins-card-head"><div><div class="ins-company">הפניקס</div><div class="ins-price-label">ביטוח מבנה</div></div><div style="text-align:left;"><div class="ins-price">₪139</div><div class="ins-price-label">/חודש</div></div></div><div class="ins-features"><span class="ins-feat">בסיסי+</span><span class="ins-feat">תגובה 24/7</span></div></div>
+      <div class="gap"></div>
+    </div>
+    <!-- CONTENTS -->
+    <div class="ins-pane" id="ins2" style="overflow-y:auto;flex:1;">
+      <div class="ins-card" onclick="goTo('s-di')"><div class="ins-card-head"><div><div class="ins-company">הראל ביטוח</div><div class="ins-price-label">ביטוח תכולה</div></div><div style="text-align:left;"><div class="ins-price">₪68</div><div class="ins-price-label">/חודש</div></div></div><div class="ins-features"><span class="ins-feat">עד 200K ₪</span><span class="ins-feat">גניבה</span><span class="ins-badge">מומלץ ⭐</span></div></div>
+      <div class="ins-card" onclick="goTo('s-di')"><div class="ins-card-head"><div><div class="ins-company">כלל ביטוח</div><div class="ins-price-label">ביטוח תכולה</div></div><div style="text-align:left;"><div class="ins-price">₪59</div><div class="ins-price-label">/חודש</div></div></div><div class="ins-features"><span class="ins-feat">עד 150K ₪</span><span class="ins-feat">שריפה</span></div></div>
+      <div class="ins-card" onclick="goTo('s-di')"><div class="ins-card-head"><div><div class="ins-company">מנורה מבטחים</div><div class="ins-price-label">ביטוח תכולה</div></div><div style="text-align:left;"><div class="ins-price">₪72</div><div class="ins-price-label">/חודש</div></div></div><div class="ins-features"><span class="ins-feat">עד 250K ₪</span><span class="ins-feat">אלקטרוניקה</span></div></div>
+      <div class="gap"></div>
+    </div>
+    <div class="bnav">
+      <div class="bnav-item" onclick="goTo('s-home')"><div class="bnav-icon">🏠</div><div class="bnav-label">בית</div></div>
+      <div class="bnav-item on"><div class="bnav-icon">🛡️</div><div class="bnav-label">ביטוח</div></div>
+      <div class="bnav-item" onclick="goTo('s-ads')"><div class="bnav-icon">🔨</div><div class="bnav-label">שוק</div></div>
+      <div class="bnav-item" onclick="goTo('s-profile')"><div class="bnav-icon">👤</div><div class="bnav-label">פרופיל</div></div>
+    </div>
+  </div>
+
+  <!-- ===== ADVERTISING MARKETPLACE ===== -->
+  <div class="screen" id="s-ads">
+    <div class="form-header" style="background:linear-gradient(135deg,#F72585,#7209B7);padding-bottom:24px;">
+      <button class="back-btn" onclick="goTo('s-home')">‹ חזרה</button>
+      <div class="form-title">שוק בעלי מקצוע</div>
+      <div class="form-sub">מצא את האיש המקצועי הנכון לדירה שלך</div>
+    </div>
+    <div class="ads-cats" id="adsCats">
+      <button class="ads-cat sel" onclick="selAd(0,this)">🎨 כולם</button>
+      <button class="ads-cat" onclick="selAd(1,this)">🏠 עיצוב פנים</button>
+      <button class="ads-cat" onclick="selAd(2,this)">🔨 שיפוצים</button>
+      <button class="ads-cat" onclick="selAd(3,this)">🏗️ בנייה</button>
+      <button class="ads-cat" onclick="selAd(4,this)">📐 אדריכלות</button>
+      <button class="ads-cat" onclick="selAd(5,this)">⚡ חשמל</button>
+      <button class="ads-cat" onclick="selAd(6,this)">🚿 אינסטלציה</button>
+      <button class="ads-cat" onclick="selAd(7,this)">❄️ מיזוג</button>
+      <button class="ads-cat" onclick="selAd(8,this)">🌿 גינון</button>
+    </div>
+    <div class="ads-grid" id="adsGrid"></div>
+    <div class="gap"></div>
+    <div class="bnav">
+      <div class="bnav-item" onclick="goTo('s-home')"><div class="bnav-icon">🏠</div><div class="bnav-label">בית</div></div>
+      <div class="bnav-item" onclick="goTo('s-ins')"><div class="bnav-icon">🛡️</div><div class="bnav-label">ביטוח</div></div>
+      <div class="bnav-item on"><div class="bnav-icon">🔨</div><div class="bnav-label">שוק</div></div>
+      <div class="bnav-item" onclick="goTo('s-profile')"><div class="bnav-icon">👤</div><div class="bnav-label">פרופיל</div></div>
+    </div>
+  </div>
+
+  <!-- ===== DETAIL - PRIVATE MORTGAGE ===== -->
+  <div class="screen" id="s-dp">
+    <div class="detail-header">
+      <button class="back-btn" onclick="goTo('s-rp')">‹ חזרה</button>
+      <div class="detail-hero">4.85%</div>
+      <div class="detail-hero-sub">בנק לאומי — ריבית פריים + 0.8%</div>
+    </div>
+    <div class="detail-body">
+      <div class="detail-section">
+        <h3>פרטי ההלוואה</h3>
+        <div class="detail-row"><span class="detail-key">סכום הלוואה</span><span class="detail-val">900,000 ₪</span></div>
+        <div class="detail-row"><span class="detail-key">תקופה</span><span class="detail-val">20 שנה</span></div>
+        <div class="detail-row"><span class="detail-key">ריבית שנתית</span><span class="detail-val">4.85%</span></div>
+        <div class="detail-row"><span class="detail-key">החזר חודשי</span><span class="detail-val">4,720 ₪</span></div>
+        <div class="detail-row"><span class="detail-key">סה"כ לתשלום</span><span class="detail-val">1,132,800 ₪</span></div>
+        <div class="detail-row"><span class="detail-key">עמלת פתיחת תיק</span><span class="detail-val">0 ₪</span></div>
+      </div>
+      <div class="detail-section">
+        <h3>תנאים נוספים</h3>
+        <div class="detail-row"><span class="detail-key">אישור עקרוני</span><span class="detail-val">3 ימי עסקים</span></div>
+        <div class="detail-row"><span class="detail-key">ביטוח חיים נדרש</span><span class="detail-val">כן</span></div>
+        <div class="detail-row"><span class="detail-key">ביטוח מבנה נדרש</span><span class="detail-val">כן</span></div>
+        <div class="detail-row"><span class="detail-key">עמלת פירעון מוקדם</span><span class="detail-val">1%</span></div>
+      </div>
+      <button class="cta-btn" onclick="alert('מעביר לייעוץ...')">📞 קבע פגישה עם יועץ</button>
+    </div>
+  </div>
+
+  <!-- ===== DETAIL - BUSINESS MORTGAGE ===== -->
+  <div class="screen" id="s-db">
+    <div class="detail-header" style="background:linear-gradient(135deg,#7209B7,#3A0CA3);">
+      <button class="back-btn" onclick="goTo('s-rb')">‹ חזרה</button>
+      <div class="detail-hero">5.50%</div>
+      <div class="detail-hero-sub">בנק הפועלים עסקים — פריים + 1.5%</div>
+    </div>
+    <div class="detail-body">
+      <div class="detail-section">
+        <h3>פרטי ההלוואה העסקית</h3>
+        <div class="detail-row"><span class="detail-key">סכום מימון</span><span class="detail-val">2,000,000 ₪</span></div>
+        <div class="detail-row"><span class="detail-key">תקופה</span><span class="detail-val">15 שנה</span></div>
+        <div class="detail-row"><span class="detail-key">ריבית</span><span class="detail-val">5.50%</span></div>
+        <div class="detail-row"><span class="detail-key">החזר חודשי</span><span class="detail-val">11,200 ₪</span></div>
+        <div class="detail-row"><span class="detail-key">שעבוד נדרש</span><span class="detail-val">ראשון</span></div>
+      </div>
+      <button class="cta-btn" style="background:linear-gradient(135deg,#7209B7,#3A0CA3);">📞 קבע פגישה עם יועץ</button>
+    </div>
+  </div>
+
+  <!-- ===== DETAIL - PRIVATE LOAN ===== -->
+  <div class="screen" id="s-dl">
+    <div class="detail-header" style="background:linear-gradient(135deg,#F72585,#7209B7);">
+      <button class="back-btn" onclick="goTo('s-rl')">‹ חזרה</button>
+      <div class="detail-hero">6.90%</div>
+      <div class="detail-hero-sub">Max הלוואות — ריבית קבועה</div>
+    </div>
+    <div class="detail-body">
+      <div class="detail-section">
+        <h3>פרטי ההלוואה</h3>
+        <div class="detail-row"><span class="detail-key">סכום</span><span class="detail-val">50,000 ₪</span></div>
+        <div class="detail-row"><span class="detail-key">תקופה</span><span class="detail-val">36 חודשים</span></div>
+        <div class="detail-row"><span class="detail-key">ריבית שנתית</span><span class="detail-val">6.90%</span></div>
+        <div class="detail-row"><span class="detail-key">החזר חודשי</span><span class="detail-val">1,540 ₪</span></div>
+        <div class="detail-row"><span class="detail-key">סה"כ לתשלום</span><span class="detail-val">55,440 ₪</span></div>
+        <div class="detail-row"><span class="detail-key">אישור</span><span class="detail-val">עד 24 שעות</span></div>
+      </div>
+      <button class="cta-btn" style="background:linear-gradient(135deg,#F72585,#7209B7);">✅ הגש בקשה עכשיו</button>
+    </div>
+  </div>
+
+  <!-- ===== DETAIL - INSURANCE ===== -->
+  <div class="screen" id="s-di">
+    <div class="detail-header" style="background:linear-gradient(135deg,#06D6A0,#118AB2);">
+      <button class="back-btn" onclick="goTo('s-ins')">‹ חזרה</button>
+      <div class="detail-hero">₪89</div>
+      <div class="detail-hero-sub">מנורה מבטחים — ביטוח חיים</div>
+    </div>
+    <div class="detail-body">
+      <div class="detail-section">
+        <h3>פרטי הפוליסה</h3>
+        <div class="detail-row"><span class="detail-key">כיסוי</span><span class="detail-val">1,000,000 ₪</span></div>
+        <div class="detail-row"><span class="detail-key">פרמיה חודשית</span><span class="detail-val">89 ₪</span></div>
+        <div class="detail-row"><span class="detail-key">השתתפות עצמית</span><span class="detail-val">0 ₪</span></div>
+        <div class="detail-row"><span class="detail-key">תקופת המתנה</span><span class="detail-val">ללא</span></div>
+        <div class="detail-row"><span class="detail-key">כיסוי נכות</span><span class="detail-val">כלול</span></div>
+        <div class="detail-row"><span class="detail-key">מחלות קשות</span><span class="detail-val">כלול</span></div>
+      </div>
+      <button class="cta-btn" style="background:linear-gradient(135deg,#06D6A0,#118AB2);">✅ הגש בקשה</button>
+    </div>
+  </div>
+
+  <!-- ===== PROFILE ===== -->
+  <div class="screen" id="s-profile">
+    <div class="prof-header">
+      <div class="prof-avatar">👤</div>
+      <div class="prof-name">אייל שוחט</div>
+      <div class="prof-email">eyal@mortgageai.co.il</div>
+    </div>
+    <div class="prof-body">
+      <div class="prof-stats">
+        <div class="prof-stat"><div class="prof-stat-val">3</div><div class="prof-stat-label">בקשות</div></div>
+        <div class="prof-stat"><div class="prof-stat-val">₪38K</div><div class="prof-stat-label">חסכת</div></div>
+        <div class="prof-stat"><div class="prof-stat-val">92</div><div class="prof-stat-label">ציון AI</div></div>
+      </div>
+      <div class="mortgage-card">
+        <div class="mc-label">המשכנתא הפעילה שלך</div>
+        <div class="mc-amount">900,000 ₪</div>
+        <div class="mc-details">
+          <div class="mc-detail"><strong>4.85%</strong>ריבית</div>
+          <div class="mc-detail"><strong>4,720 ₪</strong>חודשי</div>
+          <div class="mc-detail"><strong>18 שנה</strong>נותרו</div>
+        </div>
+      </div>
+      <div class="prof-section">
+        <div class="prof-row" onclick="goTo('s-pm')"><div class="prof-row-icon">🏠</div><div class="prof-row-label">הבקשות שלי</div><div class="prof-row-arrow">‹</div></div>
+        <div class="prof-row" onclick="goTo('s-ins')"><div class="prof-row-icon">🛡️</div><div class="prof-row-label">הביטוחים שלי</div><div class="prof-row-arrow">‹</div></div>
+        <div class="prof-row"><div class="prof-row-icon">🔔</div><div class="prof-row-label">התראות</div><div class="prof-row-arrow">‹</div></div>
+      </div>
+      <div class="prof-section">
+        <div class="prof-row" onclick="goTo('s-about')"><div class="prof-row-icon">ℹ️</div><div class="prof-row-label">מי אנחנו</div><div class="prof-row-arrow">‹</div></div>
+        <div class="prof-row" onclick="goTo('s-terms')"><div class="prof-row-icon">📄</div><div class="prof-row-label">תקנון ותנאי שימוש</div><div class="prof-row-arrow">‹</div></div>
+        <div class="prof-row" onclick="goTo('s-premium')"><div class="prof-row-icon">👑</div><div class="prof-row-label">שדרג ל-Pro</div><div style="background:linear-gradient(135deg,#F72585,#7209B7);color:#fff;font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px;">חדש</div></div>
+        <div class="prof-row" onclick="goTo('s-refer')"><div class="prof-row-icon">🎁</div><div class="prof-row-label">שתף חבר — קבל ₪500</div><div class="prof-row-arrow">‹</div></div>
+        <div class="prof-row"><div class="prof-row-icon">⭐</div><div class="prof-row-label">דרג אותנו</div><div class="prof-row-arrow">‹</div></div>
+      </div>
+    </div>
+    <div class="gap"></div>
+    <div class="bnav">
+      <div class="bnav-item" onclick="goTo('s-home')"><div class="bnav-icon">🏠</div><div class="bnav-label">בית</div></div>
+      <div class="bnav-item" onclick="goTo('s-ins')"><div class="bnav-icon">🛡️</div><div class="bnav-label">ביטוח</div></div>
+      <div class="bnav-item" onclick="goTo('s-ads')"><div class="bnav-icon">🔨</div><div class="bnav-label">שוק</div></div>
+      <div class="bnav-item on"><div class="bnav-icon">👤</div><div class="bnav-label">פרופיל</div></div>
+    </div>
+  </div>
+
+  <!-- ===== ABOUT US ===== -->
+  <div class="screen" id="s-about">
+    <div class="info-header">
+      <button class="back-btn" onclick="goTo('s-profile')">‹ חזרה</button>
+      <div class="form-title">מי אנחנו</div>
+      <div class="form-sub">המשימה שלנו: לעשות משכנתא פשוטה</div>
+    </div>
+    <div class="info-body">
+      <div class="info-section">
+        <h3>על MortgageAI</h3>
+        <p>MortgageAI היא פלטפורמת פינטק ישראלית המשתמשת בבינה מלאכותית כדי לחולל מהפכה בשוק המשכנתאות. אנחנו מאמינים שכל אדם בישראל מגיע לקבל את הצעת המשכנתא הטובה ביותר — בלי כאב ראש, בלי טלפונים אינסופיים לבנקים, ובלי לשלם יותר ממה שצריך.</p>
+      </div>
+      <div class="info-section">
+        <h3>הצוות שלנו</h3>
+        <div class="team-card"><div class="team-avatar">👨‍💼</div><div><div class="team-name">אייל שוחט</div><div class="team-role">מייסד ומנכ"ל</div></div></div>
+        <div class="team-card"><div class="team-avatar">👩‍💻</div><div><div class="team-name">מיכל לוי</div><div class="team-role">CTO — מנהלת טכנולוגיה</div></div></div>
+        <div class="team-card"><div class="team-avatar">👨‍🎨</div><div><div class="team-name">רון ברקוביץ</div><div class="team-role">מנהל עיצוב</div></div></div>
+        <div class="team-card"><div class="team-avatar">👩‍⚖️</div><div><div class="team-name">שירה כהן</div><div class="team-role">יועצת משפטית</div></div></div>
+      </div>
+      <div class="info-section">
+        <h3>המספרים שלנו</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div class="prof-stat" style="padding:20px 12px;"><div class="prof-stat-val">50K+</div><div class="prof-stat-label">משתמשים</div></div>
+          <div class="prof-stat" style="padding:20px 12px;"><div class="prof-stat-val">₪2B</div><div class="prof-stat-label">מימון</div></div>
+          <div class="prof-stat" style="padding:20px 12px;"><div class="prof-stat-val">12</div><div class="prof-stat-label">בנקים</div></div>
+          <div class="prof-stat" style="padding:20px 12px;"><div class="prof-stat-val">98%</div><div class="prof-stat-label">שביעות רצון</div></div>
+        </div>
+      </div>
+      <div class="info-section">
+        <h3>צור קשר</h3>
+        <p>info@mortgageai.co.il<br>050-000-0000<br>תל אביב, ישראל</p>
+      </div>
+      <button onclick="goTo('s-kpi')" style="width:100%;background:linear-gradient(135deg,#1A1A2E,#3A0CA3);color:#fff;border:none;border-radius:16px;padding:16px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:8px;">📊 MortgageAI במספרים ←</button>
+    </div>
+  </div>
+
+  <!-- ===== TERMS ===== -->
+  <div class="screen" id="s-terms">
+    <div class="info-header">
+      <button class="back-btn" onclick="goTo('s-profile')">‹ חזרה</button>
+      <div class="form-title">תקנון ותנאי שימוש</div>
+      <div class="form-sub">עודכן לאחרונה: אפריל 2025</div>
+    </div>
+    <div class="info-body">
+      <div class="info-section">
+        <h3>1. כללי</h3>
+        <p>ברוך הבא ל-MortgageAI. השימוש באפליקציה כפוף לתנאי שימוש אלו. בשימוש באפליקציה אתה מסכים לתנאים המפורטים להלן. MortgageAI שומרת לעצמה את הזכות לעדכן את התנאים מעת לעת.</p>
+      </div>
+      <div class="info-section">
+        <h3>2. השירות</h3>
+        <p>MortgageAI מספקת פלטפורמה להשוואת הצעות משכנתא והלוואות. המידע המוצג הינו לצורכי מידע בלבד ואינו מהווה ייעוץ פיננסי, ייעוץ השקעות, או הצעה מחייבת מכל בנק או מוסד פיננסי.</p>
+      </div>
+      <div class="info-section">
+        <h3>3. פרטיות ואבטחה</h3>
+        <p>אנחנו מחויבים להגנה על פרטיותך. המידע שאתה מספק מוצפן ומאובטח בהתאם לתקנות הגנת הפרטיות הישראלי. איננו מוכרים מידע אישי לצדדים שלישיים ללא הסכמתך המפורשת.</p>
+      </div>
+      <div class="info-section">
+        <h3>4. אחריות</h3>
+        <p>MortgageAI אינה אחראית להחלטות פיננסיות שיתקבלו על סמך המידע המוצג. ריביות ותנאים כפופים לשינוי על ידי הבנקים ומוסדות הפיננסים. מומלץ לבצע בדיקה עצמאית לפני קבלת כל החלטה.</p>
+      </div>
+      <div class="info-section">
+        <h3>5. קניין רוחני</h3>
+        <p>כל התוכן באפליקציה, לרבות לוגו, עיצוב, טקסט, ואלגוריתמים, הינם רכוש MortgageAI ומוגנים בזכויות יוצרים. אין לשכפל, להפיץ, או להשתמש בהם ללא אישור בכתב.</p>
+      </div>
+      <div class="info-section">
+        <h3>6. שינויים בשירות</h3>
+        <p>MortgageAI רשאית לשנות, להשהות, או להפסיק כל חלק מהשירות בכל עת. לא תהיה לך כל תביעה כלפינו בגין שינויים כאמור.</p>
+      </div>
+      <div class="info-section">
+        <h3>7. יצירת קשר</h3>
+        <p>לשאלות ובירורים: legal@mortgageai.co.il</p>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ===== PREMIUM SCREEN ===== -->
+  <div class="screen" id="s-premium">
+    <div class="form-header" style="background:linear-gradient(135deg,#3A0CA3,#4361EE);">
+      <button class="back-btn" onclick="goTo('s-profile')">‹ חזרה</button>
+      <div class="form-title">בחר תוכנית</div>
+      <div class="form-sub">שדרג את החיסכון שלך</div>
+    </div>
+    <div style="padding:20px 24px;">
+      <div class="plan-card free">
+        <div class="plan-name">חינמי</div>
+        <div class="plan-price">₪0 <span>/ לתמיד</span></div>
+        <div class="plan-features">
+          <div class="plan-feat">✅ השוואת 3 בנקים</div>
+          <div class="plan-feat">✅ ניתוח AI בסיסי</div>
+          <div class="plan-feat">✅ ביטוח — תצוגה</div>
+          <div class="plan-feat" style="opacity:.4;">❌ כל 12 הבנקים</div>
+          <div class="plan-feat" style="opacity:.4;">❌ ניהול מסמכים</div>
+        </div>
+        <button class="plan-btn">תוכנית נוכחית</button>
+      </div>
+      <div class="plan-card pro">
+        <div class="plan-badge">🔥 פופולרי</div>
+        <div class="plan-name">Pro</div>
+        <div class="plan-price">₪49 <span>/ חודש</span></div>
+        <div class="plan-features">
+          <div class="plan-feat">✅ כל 12 הבנקים</div>
+          <div class="plan-feat">✅ ניתוח AI מתקדם</div>
+          <div class="plan-feat">✅ התראות ריבית</div>
+          <div class="plan-feat">✅ ניהול מסמכים</div>
+          <div class="plan-feat">✅ יועץ AI ללא הגבלה</div>
+        </div>
+        <button class="plan-btn">שדרג ל-Pro ←</button>
+      </div>
+      <div class="plan-card vip">
+        <div class="plan-badge">👑 VIP</div>
+        <div class="plan-name">Enterprise</div>
+        <div class="plan-price">₪199 <span>/ חודש</span></div>
+        <div class="plan-features">
+          <div class="plan-feat">✅ הכל ב-Pro</div>
+          <div class="plan-feat">✅ יועץ אנושי ייעודי</div>
+          <div class="plan-feat">✅ API לתיווך נדל"ן</div>
+          <div class="plan-feat">✅ White-label</div>
+        </div>
+        <button class="plan-btn">צור קשר ←</button>
+      </div>
+    </div>
+    <div class="gap"></div>
+  </div>
+
+  <!-- ===== REFERRAL SCREEN ===== -->
+  <div class="screen" id="s-refer">
+    <div class="refer-hero">
+      <button class="back-btn" onclick="goTo('s-profile')">‹ חזרה</button>
+      <div style="font-size:14px;opacity:.8;margin-bottom:4px;">שתף חבר וקבל</div>
+      <div class="refer-amount">₪500</div>
+      <div style="font-size:13px;opacity:.75;margin-top:4px;">לכל חבר שלוקח משכנתא דרך MortgageAI</div>
+    </div>
+    <div class="refer-code-box" style="background:rgba(255,255,255,.15);border:2px dashed rgba(255,255,255,.5);border-radius:16px;padding:16px;margin:16px 24px 0;text-align:center;">
+      <div class="refer-code">EYAL500</div>
+      <div class="refer-code-label">הקוד האישי שלך — לחץ להעתקה</div>
+    </div>
+    <div class="refer-progress">
+      <div class="refer-prog-title">📊 ההתקדמות שלך</div>
+      <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--sub);margin-bottom:8px;"><span>2 מתוך 5 חברים</span><span>₪1,000 הרווחת</span></div>
+      <div class="refer-prog-track"><div class="refer-prog-fill"></div></div>
+      <div class="refer-prog-labels"><span>0</span><span>🎁 ב-5 חברים: בונוס ₪500 נוסף</span><span>5</span></div>
+    </div>
+    <div class="share-btns">
+      <button class="share-btn" style="background:#25D366;color:#fff;" onclick="alert('שיתוף ב-WhatsApp...')">💬 WhatsApp</button>
+      <button class="share-btn" style="background:#f0f2ff;color:var(--p);" onclick="alert('הקוד הועתק!')">📋 העתק קוד</button>
+      <button class="share-btn" style="background:#0088cc;color:#fff;" onclick="alert('שיתוף ב-Telegram...')">✈️ Telegram</button>
+      <button class="share-btn" style="background:#f0f2ff;color:var(--p);" onclick="alert('שיתוף ב-SMS...')">📱 SMS</button>
+    </div>
+    <div style="margin:20px 24px;background:#fff8e8;border-radius:14px;padding:16px;">
+      <div style="font-size:13px;font-weight:700;color:#f59e0b;margin-bottom:4px;">💰 איך זה עובד?</div>
+      <div style="font-size:12px;color:var(--sub);line-height:1.7;">1. שתף את הקוד עם חבר<br>2. החבר לוקח משכנתא דרך MortgageAI<br>3. קבל ₪500 לחשבון הבנק שלך</div>
+    </div>
+    <div class="gap"></div>
+  </div>
+
+  <!-- ===== FLOATING AI CHAT ===== -->
+  <div class="chat-fab" id="chatFab" onclick="toggleChat()">🤖</div>
+  <div class="chat-modal" id="chatModal">
+    <div class="chat-modal-handle"></div>
+    <div class="chat-modal-title">🤖 יועץ AI — MortgageAI</div>
+    <div class="chat-msgs" id="chatMsgs">
+      <div class="chat-msg bot">שלום אייל! 👋 אני יועץ ה-AI שלך. איך אפשר לעזור?</div>
+    </div>
+    <div class="chat-suggestions">
+      <button class="chat-sug" onclick="chatReply('מה הריבית הטובה ביותר עכשיו?')">מה הריבית הטובה ביותר?</button>
+      <button class="chat-sug" onclick="chatReply('כמה אוכל לקבל משכנתא?')">כמה אוכל לקבל?</button>
+      <button class="chat-sug" onclick="chatReply('מה ההבדל בין פריים לקבועה?')">פריים vs קבועה?</button>
+      <button class="chat-sug" onclick="chatReply('מתי כדאי למחזר?')">מתי למחזר?</button>
+    </div>
+  </div>
+
+</div><!-- /phone -->
+
+<script>
+// ===== ADS DATA =====
+var adsData = [
+  {cat:0,emoji:'🛋️',name:'סטודיו דיזיין',desc:'עיצוב פנים',stars:'★★★★★'},
+  {cat:1,emoji:'🏠',name:'רנובציה פלוס',desc:'שיפוצים כלליים',stars:'★★★★☆'},
+  {cat:2,emoji:'🏗️',name:'בניה ופיתוח',desc:'קבלן בנייה',stars:'★★★★★'},
+  {cat:3,emoji:'📐',name:'אדריכל דן',desc:'אדריכלות',stars:'★★★★☆'},
+  {cat:4,emoji:'⚡',name:'חשמל מקצועי',desc:'חשמלאי מוסמך',stars:'★★★★★'},
+  {cat:5,emoji:'🚿',name:'אינסטלטור יוסי',desc:'אינסטלציה',stars:'★★★★☆'},
+  {cat:6,emoji:'❄️',name:'קירור ומיזוג',desc:'מיזוג אוויר',stars:'★★★★★'},
+  {cat:7,emoji:'🌿',name:'גן עדן',desc:'גינון ועיצוב',stars:'★★★★☆'},
+  {cat:0,emoji:'🎨',name:'צביעה מקצועית',desc:'עיצוב פנים',stars:'★★★★★'},
+  {cat:1,emoji:'🪟',name:'חלונות ודלתות',desc:'שיפוצים',stars:'★★★★☆'},
+  {cat:2,emoji:'🧱',name:'בניה ירוקה',desc:'בנייה אקולוגית',stars:'★★★★★'},
+  {cat:4,emoji:'💡',name:'חשמל חכם',desc:'בית חכם',stars:'★★★★★'},
+];
+function renderAds(catIdx) {
+  var grid = document.getElementById('adsGrid');
+  var filtered = catIdx === 0 ? adsData : adsData.filter(function(a){return a.cat === catIdx;});
+  grid.innerHTML = filtered.map(function(a){
+    return '<div class="ads-card" onclick="goTo(\'s-home\')"><div class="ads-img" style="background:linear-gradient(135deg,#f0f2ff,#e0e4ff)">'+a.emoji+'</div><div class="ads-info"><div class="ads-biz">'+a.name+'</div><div class="ads-cat-label">'+a.desc+'</div><div class="ads-stars">'+a.stars+'</div></div></div>';
+  }).join('');
+}
+renderAds(0);
+
+// ===== NAVIGATION =====
+function goTo(id) {
+  document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});
+  var t = document.getElementById(id);
+  if(t){ t.classList.add('active'); t.scrollTop = 0; }
+  // status bar color
+  var sb = document.getElementById('sbar');
+  var lightScreens = ['s-onboard'];
+  updateFab(id);
+  if(sb){ sb.className = 'sb' + (lightScreens.indexOf(id)>=0 ? ' dark' : ''); }
+}
+
+// ===== SPLASH TIMER =====
+// splash timer — triggered after language selection via goTo('s-splash')
+function startSplash() {
+  goTo('s-splash');
+  setTimeout(function(){ goTo('s-onboard'); }, 2800);
+}
+
+// ===== ONBOARDING =====
+function obN(n) {
+  for(var i=0;i<4;i++) document.getElementById('ob'+i).style.display = 'none';
+  document.getElementById('ob'+n).style.display = 'flex';
+}
+
+// ===== AI ANALYSIS =====
+var _analyzeNext = '';
+function analyze(next) {
+  _analyzeNext = next;
+  goTo('s-an');
+  document.querySelectorAll('.an-step').forEach(function(el) {
+    el.style.animation = 'none';
+    void el.offsetHeight;
+    el.style.animation = '';
+  });
+  setTimeout(function(){
+    // show wow screen only for private mortgage
+    if(_analyzeNext === 's-rp') {
+      goTo('s-wow');
+      // after 3s auto-navigate or wait for user tap
+    } else {
+      goTo(_analyzeNext);
+    }
+  }, 3200);
+}
+
+// ===== DOCUMENT UPLOAD MOCK =====
+var docNames = ['תלוש שכר','חוזה עבודה','דפי חשבון','חוזה נכס'];
+function uploadDoc(idx) {
+  var card = document.getElementById('doc'+idx);
+  var status = document.getElementById('ds'+idx);
+  status.textContent = 'מעלה...';
+  setTimeout(function(){
+    card.classList.add('uploaded');
+    status.textContent = '✓ הועלה בהצלחה';
+  }, 1200);
+}
+
+// ===== INSURANCE TABS =====
+function insTab(idx) {
+  document.querySelectorAll('.ins-tab').forEach(function(t,i){ t.classList.toggle('on', i===idx); });
+  document.querySelectorAll('.ins-pane').forEach(function(p,i){ p.classList.toggle('on', i===idx); });
+}
+
+// ===== ADS CATEGORIES =====
+function selAd(idx, el) {
+  document.querySelectorAll('.ads-cat').forEach(function(c){ c.classList.remove('sel'); });
+  if(el) el.classList.add('sel');
+  renderAds(idx);
+}
+
+// ===== LANGUAGE =====
+function sL(el) {
+  document.querySelectorAll('.lang-btn').forEach(function(b){ b.classList.remove('sel'); });
+  el.classList.add('sel');
+}
+
+// ===== SLIDER =====
+function upd(el, id, sfx, comma) {
+  var v = parseInt(el.value);
+  var display = comma ? v.toLocaleString('he-IL') + ' ' + sfx : v + sfx;
+  document.getElementById(id).textContent = display;
+  var pct = (v - el.min) / (el.max - el.min) * 100;
+  el.style.background = 'linear-gradient(to left, var(--p) ' + pct + '%, #e0e6ff ' + pct + '%)';
+}
+
+// ===== CHIP SELECTION =====
+function sc(el) {
+  var siblings = el.parentNode.querySelectorAll('.chip');
+  siblings.forEach(function(c){ c.classList.remove('sel'); });
+  el.classList.add('sel');
+}
+
+// ===== CHAT =====
+var chatOpen = false;
+var chatReplies = {
+  'מה הריבית הטובה ביותר עכשיו?': 'נכון לעכשיו, One Zero מציע 4.75% — הנמוכה בשוק. לאומי ב-4.85%. ממוצע השוק עומד על 5.85%. 📊',
+  'כמה אוכל לקבל משכנתא?': 'על בסיס הכנסה של 18,000 ₪/חודש, תוכל לקבל עד כ-1.1M ₪. ב-LTV של 75% — לנכס של 1.5M. 🏠',
+  'מה ההבדל בין פריים לקבועה?': 'פריים: משתנה עם הריבית של בנק ישראל — כרגע 6%. קבועה: מוגנת מעליות ריבית אך גבוהה יותר בהתחלה. לרוב הלווים — מסלול משולב עדיף. ⚖️',
+  'מתי כדאי למחזר?': 'כדאי למחזר כאשר: הריבית ירדה ב-0.5%+ משלך, נותרו מעל 10 שנים, ואין עמלת פירעון גבוהה. רוצה שאבדוק את המשכנתא שלך? 🔍'
+};
+function toggleChat() {
+  chatOpen = !chatOpen;
+  document.getElementById('chatModal').classList.toggle('open', chatOpen);
+  document.getElementById('chatFab').textContent = chatOpen ? '✕' : '🤖';
+}
+function chatReply(q) {
+  var msgs = document.getElementById('chatMsgs');
+  var uMsg = document.createElement('div');
+  uMsg.className = 'chat-msg user';
+  uMsg.textContent = q;
+  msgs.appendChild(uMsg);
+  msgs.scrollTop = msgs.scrollHeight;
+  setTimeout(function() {
+    var bMsg = document.createElement('div');
+    bMsg.className = 'chat-msg bot';
+    bMsg.textContent = chatReplies[q] || 'אני בודק את זה עבורך... ⏳';
+    msgs.appendChild(bMsg);
+    msgs.scrollTop = msgs.scrollHeight;
+  }, 700);
+}
+// hide fab on non-main screens
+function updateFab(id) {
+  var showOn = ['s-home','s-rp','s-rb','s-rl','s-ins','s-ads','s-profile'];
+  var fab = document.getElementById('chatFab');
+  if(fab) fab.style.display = showOn.indexOf(id) >= 0 ? 'flex' : 'none';
+  // close chat on navigate
+  if(chatOpen) toggleChat();
+}
+// ===== CLOCK =====
+function updateClock() {
+  var now = new Date();
+  var h = now.getHours().toString().padStart(2,'0');
+  var m = now.getMinutes().toString().padStart(2,'0');
+  var t = h + ':' + m;
+  var c1 = document.getElementById('sclock');
+  if(c1) c1.textContent = t;
+}
+updateClock();
+setInterval(updateClock, 30000);
+</script>
+</body>
+</html>
