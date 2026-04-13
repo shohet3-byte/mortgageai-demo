@@ -577,6 +577,7 @@ select.finput{-webkit-appearance:none;appearance:none;}
 
   <!-- ===== AI ANALYSIS ===== -->
   <div class="screen" id="s-an">
+    <button class="back-btn" style="position:absolute;top:12px;right:16px;z-index:2;color:#fff;opacity:.7;" onclick="history.back()">‹ חזרה</button>
     <div class="an-rings">
       <div class="an-ring"></div><div class="an-ring"></div><div class="an-ring"></div>
       <div class="an-core">🤖</div>
@@ -1101,10 +1102,10 @@ select.finput{-webkit-appearance:none;appearance:none;}
       <div class="refer-prog-labels"><span>0</span><span>🎁 ב-5 חברים: בונוס ₪500 נוסף</span><span>5</span></div>
     </div>
     <div class="share-btns">
-      <button class="share-btn" style="background:#25D366;color:#fff;" onclick="alert('שיתוף ב-WhatsApp...')">💬 WhatsApp</button>
-      <button class="share-btn" style="background:#f0f2ff;color:var(--p);" onclick="alert('הקוד הועתק!')">📋 העתק קוד</button>
-      <button class="share-btn" style="background:#0088cc;color:#fff;" onclick="alert('שיתוף ב-Telegram...')">✈️ Telegram</button>
-      <button class="share-btn" style="background:#f0f2ff;color:var(--p);" onclick="alert('שיתוף ב-SMS...')">📱 SMS</button>
+      <button class="share-btn" style="background:#25D366;color:#fff;" onclick="showToast('💬 פותח WhatsApp...')">💬 WhatsApp</button>
+      <button class="share-btn" style="background:#f0f2ff;color:var(--p);" onclick="showToast('📋 קוד MORTGAGE500 הועתק!')">📋 העתק קוד</button>
+      <button class="share-btn" style="background:#0088cc;color:#fff;" onclick="showToast('✈️ פותח Telegram...')">✈️ Telegram</button>
+      <button class="share-btn" style="background:#f0f2ff;color:var(--p);" onclick="showToast('📱 פותח SMS...')">📱 SMS</button>
     </div>
     <div style="margin:20px 24px;background:#fff8e8;border-radius:14px;padding:16px;">
       <div style="font-size:13px;font-weight:700;color:#f59e0b;margin-bottom:4px;">💰 איך זה עובד?</div>
